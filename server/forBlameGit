@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+for file in $(git ls-files); 
+	do git log $file;
+done
