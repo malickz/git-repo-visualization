@@ -1,6 +1,13 @@
+# Introduction
+
+Its about visualizing git repository to find the dominant author of a file,
+dominancy can be based on two criterion:
+ 1. maximum line of code of some author, author with max LOC is stacked on top
+ 2. author with highest number of functions in a file, such an author is stacked on top of line graph
+
 # GitRepoVisualization
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 1.0.0.
+This project use [Angular CLI](https://github.com/angular/angular-cli) version 1.0.0.
 
 ## Development server
 
