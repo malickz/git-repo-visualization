@@ -29,7 +29,7 @@ export class ColoredLinesComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.gitHubService.getLineData().subscribe((data: any) => {
+    this.gitHubService.getLineData("diff.c").subscribe((data: any) => {
       let d3 = this._d3;
       let d3ParentElement: Selection<HTMLElement, any, any, any>;
       let d3G: Selection<SVGGElement, any, null, undefined>;

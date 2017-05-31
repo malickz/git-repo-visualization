@@ -40,9 +40,13 @@ export class GitHubService {
       .map(res => res.json());
   }
 
-  public getLineData() {
-    return this.http.get('/api2/getLineData')
-      .map(res => res.json());
+  public getLineData(path: string) {
+    let bodyString = JSON.stringify({"path": path});
+    let headers = new Headers({ 'Content-Type': 'application/json' });
+    let options = new RequestOptions({ headers: headers });
+    return this.http.post('/api2/getLineData', bodyString, options).map(
+      res => res.json()
+    );
   }
 
   public getFunctionData(path: string) {

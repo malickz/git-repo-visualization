@@ -4,6 +4,8 @@
   </div>
   <div class="legend-container">
     <div class="legend">
+      <input #path >
+      <button (click)="renderChart(path.value)">Submit</button>
       <h3>Legend:</h3>
       <ul>
         <li [style.color]="getAuthorColor(d.authormail)"

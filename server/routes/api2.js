@@ -46,8 +46,8 @@ router.post('/saveFileLOC', function(req, res) {
   saveFileLoc(req, res);
 });
 
-router.get('/getLineData', function(req, res) {
-  fetchLineData(req, res, "diff.c", (data) => {
+router.post('/getLineData', function(req, res) {
+  fetchLineData(req, res, req.param("path"), (data) => {
     return res.status(200).json(data);
   });
 });
@@ -369,7 +369,7 @@ function fetchLineData(req, res, path, cb) {
     let data = {};
     data["path"] = result[0].path;
 
-    db.all("select loc from tree_structure where path='diff.c'", (err, r) => {
+    db.all("select loc from tree_structure where path='"+ path + "'", (err, r) => {
       if (err) {
         console.log("select failed on line blame: " + "");
       }
@@ -398,7 +398,7 @@ function getFunctionData(req, res) {
     funData.push(tempParts);
   });
 
-  fetchLineData(req, res, "diff.c", (data) => {
+  fetchLineData(req, res, req.param("path"), (data) => {
     res.status(200).json([funData, data]);
   });
 }

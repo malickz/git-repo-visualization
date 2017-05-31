@@ -19,7 +19,6 @@ export class FunctionDominantComponent implements OnInit {
   private _d3G: Selection<SVGGElement, any, null, undefined>;
   private authorMap: Map<string, string> = new Map<string, string>();
   private sortedDataByMaxFunctions: Array<any> = [];
-  private authorLeaderBoard: Array<any> = [];
   private uniqueAuthors: Array<any> = [];
 
   constructor(private _element: ElementRef,
@@ -30,110 +29,118 @@ export class FunctionDominantComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.gitHubService.getFunctionData("diff.c").subscribe((dataArr: any) => {
-      let funData = dataArr[0];
-      let data = dataArr[1];
+    this.renderChart("diff.c");
+  }
 
-      let d3 = this._d3;
-      let d3ParentElement: Selection<HTMLElement, any, any, any>;
-      let d3G: Selection<SVGGElement, any, null, undefined>;
-      let authorLookup: Map<string, number> = new Map<string, number>();
-      let path: string = data["path"];
-      let authorCount: number = 0;
+  public renderChart(value: string) {
+    if (value)
+      this.gitHubService.getFunctionData(value).subscribe((dataArr: any) => {
+        let funData = dataArr[0];
+        let data = dataArr[1];
 
-      funData.forEach(fun => { // find the author of function
-        data.lines.forEach(line => {
-          if(parseInt(line.finalline) === parseInt(fun[2])) {
-            fun.push(line.authormail);
-          }
-        });
-      });
+        let d3 = this._d3;
+        let d3ParentElement: Selection<HTMLElement, any, any, any>;
+        let d3G: Selection<SVGGElement, any, null, undefined>;
+        let authorLookup: Map<string, number> = new Map<string, number>();
+        let path: string = data["path"];
+        let authorCount: number = 0;
+        let authorLeaderBoard = [];
+        let sortedDataByMaxFunctions = [];
 
-
-      funData.forEach(line => { // get the count of function per author
-        if (!authorLookup.get(line[line.length-1])) {
-          funData.forEach(line2 => {
-            if(line[line.length-1] === line2[line2.length-1]) {
-              authorCount++;
+        funData.forEach(fun => { // find the author of function
+          data.lines.forEach(line => {
+            if(parseInt(line.finalline) === parseInt(fun[2])) {
+              fun.push(line.authormail);
             }
           });
-          authorLookup.set(line[line.length-1], authorCount);
-          this.authorLeaderBoard.push([line[line.length-1], authorCount]);
-          authorCount = 0;
-        }
-      });
+        });
 
-      this.authorLeaderBoard.sort((a, b) => { // returns me sorted list of authors according to their function count in ascending order
-        return b[1] > a[1] ? 1 : -1;
-      }).forEach(author => {
-        data.lines.forEach(line => {
-          if(author[0] === line.authormail) {
-            this.sortedDataByMaxFunctions.push(line); // stack the lines as per sorted authors list, author with more function comes at top and then the one with 2nd less lines
+
+        funData.forEach(line => { // get the count of function per author
+          if (!authorLookup.get(line[line.length-1])) {
+            funData.forEach(line2 => {
+              if(line[line.length-1] === line2[line2.length-1]) {
+                authorCount++;
+              }
+            });
+            authorLookup.set(line[line.length-1], authorCount);
+            authorLeaderBoard.push([line[line.length-1], authorCount]);
+            authorCount = 0;
           }
         });
-      });
+
+        authorLeaderBoard.sort((a, b) => { // returns me sorted list of authors according to their function count in ascending order
+          return b[1] > a[1] ? 1 : -1;
+        }).forEach(author => {
+          data.lines.forEach(line => {
+            if(author[0] === line.authormail) {
+              sortedDataByMaxFunctions.push(line); // stack the lines as per sorted authors list, author with more function comes at top and then the one with 2nd less lines
+            }
+          });
+        });
 
 
-      data.lines.forEach(line => {
-        if (!authorLookup.get(line.authormail)) {
-          this.sortedDataByMaxFunctions.push(line);
+        data.lines.forEach(line => {
+          if (!authorLookup.get(line.authormail)) {
+            sortedDataByMaxFunctions.push(line);
+          }
+        });
+
+        this.uniqueAuthors = sortedDataByMaxFunctions.map(auth=> {
+          return auth.authormail
+        }).filter((elem, index, self) => {
+          return index == self.indexOf(elem);
+        }).map((auth) => {
+          return {"authormail": auth}
+        });
+
+        if (this._parentNativeElement !== null) {
+
+          d3ParentElement = d3.select(this._parentNativeElement);
+
+          this._d3Svg = d3ParentElement.select<SVGSVGElement>('svg');
+
+          this._d3Svg.selectAll('g').remove();
+
+          d3G = this._d3G = this._d3Svg.append<SVGGElement>('g');
+
+          let screenHeight: number =  (Number(data["lines-count"]) * 1.5) + 2;
+
+          this._d3Svg.attr('width', this.width);
+          this._d3Svg.attr('height', screenHeight);
+
+          let lineStrokeWidth: number = screenHeight/data["lines-count"];
+
+          let widthSumY1: number = 0;
+          let widthSumY2: number = 0;
+
+          this._d3G.selectAll<SVGLineElement, any>('line')
+            .data(sortedDataByMaxFunctions)
+            .enter()
+            .append<SVGLineElement>('line')
+            .attr("x1", (d: any) => { // start point of line
+              return 0;
+            })
+            .attr("y1", (d: any) => { // y/ vertical postion of line on left
+              widthSumY1 = widthSumY1 + lineStrokeWidth;
+              return widthSumY1;
+            })
+            .attr("x2", (d: any) => { // length of line
+              return d.contentlength * 7;
+            })
+            .attr("y2", (d: any) => { // y/ vertical postion of line on right
+              widthSumY2 = widthSumY2 + lineStrokeWidth;
+              return widthSumY2;
+            })
+            .attr("stroke-width", 1)
+            .attr("stroke", (d: any) => {
+              return this.getAuthorColor(d.authormail);
+            })
+            .append("title").text((d: any) => {
+            return d.authormail;
+          });
         }
       });
-
-      this.uniqueAuthors = this.sortedDataByMaxFunctions.map(auth=> {
-        return auth.authormail
-      }).filter((elem, index, self) => {
-        return index == self.indexOf(elem);
-      }).map((auth) => {
-        return {"authormail": auth}
-      });
-
-      if (this._parentNativeElement !== null) {
-
-        d3ParentElement = d3.select(this._parentNativeElement);
-
-        this._d3Svg = d3ParentElement.select<SVGSVGElement>('svg');
-
-        d3G = this._d3G = this._d3Svg.append<SVGGElement>('g');
-
-        let screenHeight: number =  (Number(data["lines-count"]) * 1.5) + 2;
-
-        this._d3Svg.attr('width', this.width);
-        this._d3Svg.attr('height', screenHeight);
-
-        let lineStrokeWidth: number = screenHeight/data["lines-count"];
-
-        let widthSumY1: number = 0;
-        let widthSumY2: number = 0;
-
-        this._d3G.selectAll<SVGLineElement, any>('line')
-          .data(this.sortedDataByMaxFunctions)
-          .enter()
-          .append<SVGLineElement>('line')
-          .attr("x1", (d: any) => { // start point of line
-            return 0;
-          })
-          .attr("y1", (d: any) => { // y/ vertical postion of line on left
-            widthSumY1 = widthSumY1 + lineStrokeWidth;
-            return widthSumY1;
-          })
-          .attr("x2", (d: any) => { // length of line
-            return d.contentlength * 7;
-          })
-          .attr("y2", (d: any) => { // y/ vertical postion of line on right
-            widthSumY2 = widthSumY2 + lineStrokeWidth;
-            return widthSumY2;
-          })
-          .attr("stroke-width", 1)
-          .attr("stroke", (d: any) => {
-            return this.getAuthorColor(d.authormail);
-          })
-          .append("title").text((d: any) => {
-          return d.authormail;
-        });
-      }
-    });
-
   }
 
   public getAuthorColor(author: string) {
