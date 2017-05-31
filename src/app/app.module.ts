@@ -19,6 +19,8 @@ import { TreemapComponent } from './d3-component/treemap/treemap.component';
 import { SunburstComponent } from './d3-component/sunburst/sunburst.component';
 import {TreeDataService} from "./tree-data.service";
 import { ColoredLinesComponent } from './colored-lines/colored-lines.component';
+import { FunctionDominantComponent } from './function-dominant/function-dominant.component';
+import {FlexLayoutModule} from "../../server/tmp/node_modules/@angular/flex-layout";
 
 // Define the routes
 const ROUTES = [
@@ -54,6 +56,10 @@ const ROUTES = [
   {
     path: 'lineGraph',
     component: ColoredLinesComponent
+  },
+  {
+    path: 'lineGraphFun',
+    component: FunctionDominantComponent
   }
 ];
 
@@ -69,12 +75,14 @@ const ROUTES = [
     D3ComponentComponent,
     TreemapComponent,
     SunburstComponent,
-    ColoredLinesComponent
+    ColoredLinesComponent,
+    FunctionDominantComponent
   ],
   imports: [
     BrowserModule,
     FormsModule,
     HttpModule,
+    FlexLayoutModule,
     RouterModule.forRoot(ROUTES) // Add routes to the app
   ],
   providers: [

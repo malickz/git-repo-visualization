@@ -1,0 +1,16 @@
+<div class="container-graph">
+  <div class="lines-container">
+    <svg class="lines"></svg>
+  </div>
+  <div class="legend-container">
+    <div class="legend">
+      <h3>Legend:</h3>
+      <ul>
+        <li [style.color]="getAuthorColor(d.authormail)"
+            *ngFor="let d of getLegend() | async">
+          {{ d.authormail }}
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>

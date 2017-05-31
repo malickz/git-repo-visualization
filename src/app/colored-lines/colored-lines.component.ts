@@ -1,7 +1,7 @@
 import {Component, ElementRef, Input, OnInit} from '@angular/core';
 import { D3Service, D3, Selection } from 'd3-ng2-service';
 import {GitHubService} from "../git-hub.service";
-import {forEach} from "@angular/router/src/utils/collection";
+import {Observable} from "rxjs/Rx";
 
 @Component({
   selector: 'app-colored-lines',
@@ -18,7 +18,8 @@ export class ColoredLinesComponent implements OnInit {
   private _d3Svg: Selection<SVGSVGElement, any, null, undefined>;
   private _d3G: Selection<SVGGElement, any, null, undefined>;
   private authorMap: Map<string, string> = new Map<string, string>();
-  private onePage: boolean = true;
+  private uniqueAuthors: Array<any> = [];
+  private onePage: boolean = false;
 
   constructor(private _element: ElementRef,
               private _d3Service: D3Service,
@@ -51,14 +52,22 @@ export class ColoredLinesComponent implements OnInit {
         }
       });
 
-      authorLookupArray.sort((a, b) => {
+      authorLookupArray.sort((a, b) => { // returns me sorted list of authors according to their LOC in ascending order
         return b[1] > a[1] ? 1 : -1;
       }).forEach(a => {
         data.lines.forEach(line => {
           if(a[0] === line.authormail) {
-            sortedDataByMaxAuthor.push(line);
+            sortedDataByMaxAuthor.push(line); // stack the lines as per sorted authors list, author with more lines comes at top and then the one with 2nd less lines
           }
         });
+      });
+
+      this.uniqueAuthors = sortedDataByMaxAuthor.map(auth=> {
+        return auth.authormail
+      }).filter((elem, index, self) => {
+        return index == self.indexOf(elem);
+      }).map((auth) => {
+        return {"authormail": auth}
       });
 
       if (this._parentNativeElement !== null) {
@@ -146,6 +155,10 @@ export class ColoredLinesComponent implements OnInit {
       }
     });
 
+  }
+
+  public getLegend(): Observable<any> {
+    return Observable.of(this.uniqueAuthors);
   }
 
   public getAuthorColor(author: string) {

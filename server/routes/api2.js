@@ -47,8 +47,13 @@ router.post('/saveFileLOC', function(req, res) {
 });
 
 router.get('/getLineData', function(req, res) {
-  //console.log(ctags.ctagsCommand(["-x", "--c-types=f", "./tmp/git/abspath.c"])); //-x --c-types=f
-  fetchLineData(req, res);
+  fetchLineData(req, res, "diff.c", (data) => {
+    return res.status(200).json(data);
+  });
+});
+
+router.post('/getFunctionData', function(req, res) {
+  getFunctionData(req, res);
 });
 
 router.post('/singleFileHistory', function(req, res) {
@@ -355,8 +360,8 @@ function saveFileLoc(req, res) {
   });
 }
 
-function fetchLineData(req, res) {
-  db.all("select DISTINCT line_blame_info.finalline, line_blame_info.path, line_blame_info.contentlength, commits.authormail, commits.authorname from line_blame_info join commits on line_blame_info.sha = commits.sha where line_blame_info.path = 'diff.c'", (err, result) => {
+function fetchLineData(req, res, path, cb) {
+  db.all("select DISTINCT line_blame_info.finalline, line_blame_info.path, line_blame_info.contentlength, commits.authormail, commits.authorname from line_blame_info join commits on line_blame_info.sha = commits.sha where line_blame_info.path = '"+ path + "'", (err, result) => {
     if (err) {
       console.log("select failed on line blame: " + "");
       return res.status(500).json("failed");
@@ -374,8 +379,27 @@ function fetchLineData(req, res) {
       result.forEach(row => {
         data.lines.push(row);
       });
-      return res.status(200).json(data);
+      cb(data);
     });
+  });
+}
+
+function getFunctionData(req, res) {
+  // let data = ctags.ctagsCommand(["-x", "--c-types=f", "./tmp/git/" +req.param("path")]);
+  let tags = ctags.generateTags(["-x", "--c-types=f", "./tmp/git/" + req.param("path")]);
+  let re = /(\w+\s+)(function\s+)(\d+\s+)([.?\/?a-z]*\s+)(.*)/im;
+  let funData = [];
+  tags.forEach((tag) => {
+    let parts = tag[0].match(re);
+    let tempParts = [];
+    for (let i = 1; i < parts.length; i++) {
+      tempParts.push(parts[i].trim());
+    }
+    funData.push(tempParts);
+  });
+
+  fetchLineData(req, res, "diff.c", (data) => {
+    res.status(200).json([funData, data]);
   });
 }
 

@@ -45,6 +45,15 @@ export class GitHubService {
       .map(res => res.json());
   }
 
+  public getFunctionData(path: string) {
+    let bodyString = JSON.stringify({"path": path});
+    let headers = new Headers({ 'Content-Type': 'application/json' });
+    let options = new RequestOptions({ headers: headers });
+    return this.http.post('/api2/getFunctionData', bodyString, options).map(
+      res => res.json()
+    );
+  }
+
   public saveFileLOC(block: Array<number>) {
     let bodyString = JSON.stringify({"start": block[0], "end": block[1]});
     let headers = new Headers({ 'Content-Type': 'application/json' });
