@@ -21,6 +21,7 @@ import {TreeDataService} from "./tree-data.service";
 import { ColoredLinesComponent } from './colored-lines/colored-lines.component';
 import { FunctionDominantComponent } from './function-dominant/function-dominant.component';
 import {FlexLayoutModule} from "../../server/tmp/node_modules/@angular/flex-layout";
+import { FunctionMetricComponent } from './function-metric/function-metric.component';
 
 // Define the routes
 const ROUTES = [
@@ -60,6 +61,10 @@ const ROUTES = [
   {
     path: 'lineGraphFun',
     component: FunctionDominantComponent
+  },
+  {
+    path: 'functionDominance',
+    component: FunctionMetricComponent
   }
 ];
 
@@ -76,7 +81,8 @@ const ROUTES = [
     TreemapComponent,
     SunburstComponent,
     ColoredLinesComponent,
-    FunctionDominantComponent
+    FunctionDominantComponent,
+    FunctionMetricComponent
   ],
   imports: [
     BrowserModule,

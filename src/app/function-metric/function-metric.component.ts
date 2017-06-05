@@ -1,14 +1,14 @@
 import {Component, ElementRef, Input, OnInit} from '@angular/core';
-import { D3Service, D3, Selection } from 'd3-ng2-service';
+import {D3Service, D3, Selection } from 'd3-ng2-service';
 import {GitHubService} from "../git-hub.service";
-import {Observable} from "rxjs/Rx";
+import {Observable} from "rxjs";
 
 @Component({
-  selector: 'app-function-dominant',
-  templateUrl: './function-dominant.component.html',
-  styleUrls: ['./function-dominant.component.css']
+  selector: 'app-function-metric',
+  templateUrl: './function-metric.component.html',
+  styleUrls: ['./function-metric.component.css']
 })
-export class FunctionDominantComponent implements OnInit {
+export class FunctionMetricComponent implements OnInit {
 
   @Input() width: number = 700;
   @Input() height: number = 800;
@@ -18,8 +18,8 @@ export class FunctionDominantComponent implements OnInit {
   private _d3Svg: Selection<SVGSVGElement, any, null, undefined>;
   private _d3G: Selection<SVGGElement, any, null, undefined>;
   private authorMap: Map<string, string> = new Map<string, string>();
-  private sortedDataByMaxFunctions: Array<any> = [];
-  private uniqueAuthors: Array<any> = [];
+  private uniqueAuthors: Array<any> = ["others"];
+  private funData: Array<any> = [];
 
   constructor(private _element: ElementRef,
               private _d3Service: D3Service,
@@ -29,71 +29,19 @@ export class FunctionDominantComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.renderChart("diff.c");
+    this.renderChart("attr.c");
   }
 
   public renderChart(value: string) {
     if (value)
-      this.gitHubService.getFunctionData(value, true).subscribe((dataArr: any) => {
-        let funData = dataArr[0];
+      this.gitHubService.getFunctionMetric(value).subscribe((dataArr: any) => {
+        this.funData = dataArr[0];
         let data = dataArr[1];
 
         let d3 = this._d3;
         let d3ParentElement: Selection<HTMLElement, any, any, any>;
         let d3G: Selection<SVGGElement, any, null, undefined>;
-        let authorLookup: Map<string, number> = new Map<string, number>();
         let path: string = data["path"];
-        let authorCount: number = 0;
-        let authorLeaderBoard = [];
-        let sortedDataByMaxFunctions = [];
-
-        funData.forEach(fun => { // find the author of function
-          data.lines.forEach(line => {
-            if(parseInt(line.finalline) === parseInt(fun[2])) {
-              fun.push(line.personid);
-            }
-          });
-        });
-
-
-        funData.forEach(line => { // get the count of function per author
-          if (!authorLookup.get(line[line.length-1])) {
-            funData.forEach(line2 => {
-              if(line[line.length-1] === line2[line2.length-1]) {
-                authorCount++;
-              }
-            });
-            authorLookup.set(line[line.length-1], authorCount);
-            authorLeaderBoard.push([line[line.length-1], authorCount, line]);
-            authorCount = 0;
-          }
-        });
-
-        authorLeaderBoard.sort((a, b) => { // returns me sorted list of authors according to their function count in ascending order
-          return b[1] > a[1] ? 1 : -1;
-        }).forEach(author => {
-          data.lines.forEach(line => {
-            if(author[0] === line.personid) {
-              line["functionName"] = author[2][4];
-              sortedDataByMaxFunctions.push(line); // stack the lines as per sorted authors list, author with more function comes at top and then the one with 2nd less lines
-            }
-          });
-        });
-
-
-        data.lines.forEach(line => {
-          if (!authorLookup.get(line.personid)) {
-            sortedDataByMaxFunctions.push(line);
-          }
-        });
-
-        this.uniqueAuthors = sortedDataByMaxFunctions.map(auth=> {
-          return auth.personid
-        }).filter((elem, index, self) => {
-          return index == self.indexOf(elem);
-        }).map((auth) => {
-          return {"personid": auth}
-        });
 
         if (this._parentNativeElement !== null) {
 
@@ -116,7 +64,7 @@ export class FunctionDominantComponent implements OnInit {
           let widthSumY2: number = 0;
 
           this._d3G.selectAll<SVGLineElement, any>('line')
-            .data(sortedDataByMaxFunctions)
+            .data(data.lines)
             .enter()
             .append<SVGLineElement>('line')
             .attr("x1", (d: any) => { // start point of line
@@ -127,27 +75,54 @@ export class FunctionDominantComponent implements OnInit {
               return widthSumY1;
             })
             .attr("x2", (d: any) => { // length of line
-              return 700;
+              return d.contentlength * 5;
             })
-            .attr("y2", (d: any) => { // y/ vertical postion of line on right
+            .attr("y2", (d: any) => { // y/ vertical position of line on right
               widthSumY2 = widthSumY2 + lineStrokeWidth;
               return widthSumY2;
             })
             .attr("stroke-width", 1)
             .attr("stroke", (d: any) => {
-              return this.getAuthorColor(d.personid);
+              let functionCheck = this.isLinePartOfFunction(d);
+              if(functionCheck[0]) {
+                return this.getAuthorColor(functionCheck[1][6][0]);
+              } else {
+                return this.getAuthorColor("others");
+              }
             })
-            .append("title").text((d: any) => {
-            return d.personid + " *** " + d.functionName;
-          });
+            .append("title")
+            .text((d: any) => {
+              let functionCheck = this.isLinePartOfFunction(d);
+              if(functionCheck[0]) {
+                return functionCheck[1][6][0] + " --- " + functionCheck[1][4];
+              } else {
+                return "others";
+              }
+            });
         }
       });
   }
 
+  private isLinePartOfFunction(d: any): Array<any> {
+    let flag: Array<any> = [];
+    flag[0] = false;
+    this.funData.forEach(fd => {
+      if (d.finalline >= Number(fd[2]) && d.finalline <= Number(fd[5])) {
+        flag[0] = true;
+        flag[1] = fd;
+      }
+    });
+    return flag;
+  }
+
   public getAuthorColor(author: string) {
+    if (author == "others") {
+      this.authorMap.set(author,  this.hslToHex(0, 0, 75));
+    }
     if (this.authorMap.get(author)) {
       return this.authorMap.get(author);
     } else {
+      this.uniqueAuthors.push(author);
       let mapSize: number = this.authorMap.size;
       if (mapSize >= colors.length) {
         let rand = colors[Math.floor(Math.random() * colors.length)];
@@ -198,8 +173,8 @@ export class FunctionDominantComponent implements OnInit {
 }
 
 export const colors: Array<string> = [
-  "017, 097, 044",
   "000, 000, 000",
+  "017, 097, 044",
   "208, 068, 052",
   "316, 056, 025",
   "104, 044, 045",

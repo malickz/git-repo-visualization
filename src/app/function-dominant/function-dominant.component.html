@@ -8,9 +8,9 @@
       <button (click)="renderChart(path.value)">Submit</button>
       <h3>Legend:</h3>
       <ul>
-        <li [style.color]="getAuthorColor(d.authormail)"
+        <li [style.color]="getAuthorColor(d.personid)"
             *ngFor="let d of getLegend() | async">
-          {{ d.authormail }}
+          {{ d.personid }}
         </li>
       </ul>
     </div>

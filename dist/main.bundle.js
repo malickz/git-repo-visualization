@@ -1968,6 +1968,7 @@ AppComponent = __decorate([
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_19__colored_lines_colored_lines_component__ = __webpack_require__(334);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_20__function_dominant_function_dominant_component__ = __webpack_require__(340);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_21__server_tmp_node_modules_angular_flex_layout__ = __webpack_require__(988);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_22__function_metric_function_metric_component__ = __webpack_require__(997);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppModule; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -1975,6 +1976,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+
 
 
 
@@ -2034,6 +2036,10 @@ var ROUTES = [
     {
         path: 'lineGraphFun',
         component: __WEBPACK_IMPORTED_MODULE_20__function_dominant_function_dominant_component__["a" /* FunctionDominantComponent */]
+    },
+    {
+        path: 'functionDominance',
+        component: __WEBPACK_IMPORTED_MODULE_22__function_metric_function_metric_component__["a" /* FunctionMetricComponent */]
     }
 ];
 var AppModule = (function () {
@@ -2055,7 +2061,8 @@ AppModule = __decorate([
             __WEBPACK_IMPORTED_MODULE_16__d3_component_treemap_treemap_component__["a" /* TreemapComponent */],
             __WEBPACK_IMPORTED_MODULE_17__d3_component_sunburst_sunburst_component__["a" /* SunburstComponent */],
             __WEBPACK_IMPORTED_MODULE_19__colored_lines_colored_lines_component__["a" /* ColoredLinesComponent */],
-            __WEBPACK_IMPORTED_MODULE_20__function_dominant_function_dominant_component__["a" /* FunctionDominantComponent */]
+            __WEBPACK_IMPORTED_MODULE_20__function_dominant_function_dominant_component__["a" /* FunctionDominantComponent */],
+            __WEBPACK_IMPORTED_MODULE_22__function_metric_function_metric_component__["a" /* FunctionMetricComponent */]
         ],
         imports: [
             __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser__["a" /* BrowserModule */],
@@ -2127,14 +2134,14 @@ var ColoredLinesComponent = (function () {
             var path = data["path"];
             var authorCount = 0;
             data.lines.forEach(function (line) {
-                if (!authorLookup.get(line.authormail)) {
+                if (!authorLookup.get(line.personid)) {
                     data.lines.forEach(function (line2) {
-                        if (line.authormail === line2.authormail) {
+                        if (line.personid === line2.personid) {
                             authorCount++;
                         }
                     });
-                    authorLookup.set(line.authormail, authorCount);
-                    authorLookupArray.push([line.authormail, authorCount]);
+                    authorLookup.set(line.personid, authorCount);
+                    authorLookupArray.push([line.personid, authorCount]);
                     authorCount = 0;
                 }
             });
@@ -2142,17 +2149,17 @@ var ColoredLinesComponent = (function () {
                 return b[1] > a[1] ? 1 : -1;
             }).forEach(function (a) {
                 data.lines.forEach(function (line) {
-                    if (a[0] === line.authormail) {
+                    if (a[0] === line.personid) {
                         sortedDataByMaxAuthor.push(line); // stack the lines as per sorted authors list, author with more lines comes at top and then the one with 2nd less lines
                     }
                 });
             });
             _this.uniqueAuthors = sortedDataByMaxAuthor.map(function (auth) {
-                return auth.authormail;
+                return auth.personid;
             }).filter(function (elem, index, self) {
                 return index == self.indexOf(elem);
             }).map(function (auth) {
-                return { "authormail": auth };
+                return { "personid": auth };
             });
             if (_this._parentNativeElement !== null) {
                 d3ParentElement = d3.select(_this._parentNativeElement);
@@ -2184,10 +2191,10 @@ var ColoredLinesComponent = (function () {
                     })
                         .attr("stroke-width", widthLine_1)
                         .attr("stroke", function (d) {
-                        return _this.getAuthorColor(d.authormail);
+                        return _this.getAuthorColor(d.personid);
                     })
                         .append("title").text(function (d) {
-                        return d.authormail;
+                        return d.personid;
                     });
                 }
                 else {
@@ -2209,7 +2216,7 @@ var ColoredLinesComponent = (function () {
                         return widthSumY1_2;
                     })
                         .attr("x2", function (d) {
-                        return d.contentlength * 7;
+                        return 600;
                     })
                         .attr("y2", function (d) {
                         widthSumY2_2 = widthSumY2_2 + lineStrokeWidth_1;
@@ -2217,10 +2224,10 @@ var ColoredLinesComponent = (function () {
                     })
                         .attr("stroke-width", 1)
                         .attr("stroke", function (d) {
-                        return _this.getAuthorColor(d.authormail);
+                        return _this.getAuthorColor(d.personid);
                     })
                         .append("title").text(function (d) {
-                        return d.authormail;
+                        return d.personid;
                     });
                 }
             }
@@ -2700,7 +2707,7 @@ var FunctionDominantComponent = (function () {
     FunctionDominantComponent.prototype.renderChart = function (value) {
         var _this = this;
         if (value)
-            this.gitHubService.getFunctionData(value).subscribe(function (dataArr) {
+            this.gitHubService.getFunctionData(value, true).subscribe(function (dataArr) {
                 var funData = dataArr[0];
                 var data = dataArr[1];
                 var d3 = _this._d3;
@@ -2714,7 +2721,7 @@ var FunctionDominantComponent = (function () {
                 funData.forEach(function (fun) {
                     data.lines.forEach(function (line) {
                         if (parseInt(line.finalline) === parseInt(fun[2])) {
-                            fun.push(line.authormail);
+                            fun.push(line.personid);
                         }
                     });
                 });
@@ -2726,7 +2733,7 @@ var FunctionDominantComponent = (function () {
                             }
                         });
                         authorLookup.set(line[line.length - 1], authorCount);
-                        authorLeaderBoard.push([line[line.length - 1], authorCount]);
+                        authorLeaderBoard.push([line[line.length - 1], authorCount, line]);
                         authorCount = 0;
                     }
                 });
@@ -2734,22 +2741,23 @@ var FunctionDominantComponent = (function () {
                     return b[1] > a[1] ? 1 : -1;
                 }).forEach(function (author) {
                     data.lines.forEach(function (line) {
-                        if (author[0] === line.authormail) {
+                        if (author[0] === line.personid) {
+                            line["functionName"] = author[2][4];
                             sortedDataByMaxFunctions.push(line); // stack the lines as per sorted authors list, author with more function comes at top and then the one with 2nd less lines
                         }
                     });
                 });
                 data.lines.forEach(function (line) {
-                    if (!authorLookup.get(line.authormail)) {
+                    if (!authorLookup.get(line.personid)) {
                         sortedDataByMaxFunctions.push(line);
                     }
                 });
                 _this.uniqueAuthors = sortedDataByMaxFunctions.map(function (auth) {
-                    return auth.authormail;
+                    return auth.personid;
                 }).filter(function (elem, index, self) {
                     return index == self.indexOf(elem);
                 }).map(function (auth) {
-                    return { "authormail": auth };
+                    return { "personid": auth };
                 });
                 if (_this._parentNativeElement !== null) {
                     d3ParentElement = d3.select(_this._parentNativeElement);
@@ -2774,7 +2782,7 @@ var FunctionDominantComponent = (function () {
                         return widthSumY1_1;
                     })
                         .attr("x2", function (d) {
-                        return d.contentlength * 7;
+                        return 700;
                     })
                         .attr("y2", function (d) {
                         widthSumY2_1 = widthSumY2_1 + lineStrokeWidth_1;
@@ -2782,10 +2790,10 @@ var FunctionDominantComponent = (function () {
                     })
                         .attr("stroke-width", 1)
                         .attr("stroke", function (d) {
-                        return _this.getAuthorColor(d.authormail);
+                        return _this.getAuthorColor(d.personid);
                     })
                         .append("title").text(function (d) {
-                        return d.authormail;
+                        return d.personid + " *** " + d.functionName;
                     });
                 }
             });
@@ -3326,11 +3334,23 @@ var GitHubService = (function () {
         var options = new __WEBPACK_IMPORTED_MODULE_1__angular_http__["d" /* RequestOptions */]({ headers: headers });
         return this.http.post('/api2/getLineData', bodyString, options).map(function (res) { return res.json(); });
     };
-    GitHubService.prototype.getFunctionData = function (path) {
-        var bodyString = JSON.stringify({ "path": path });
+    GitHubService.prototype.getFunctionData = function (path, lineData) {
+        var bodyString = JSON.stringify({ "path": path, "lineData": lineData });
         var headers = new __WEBPACK_IMPORTED_MODULE_1__angular_http__["c" /* Headers */]({ 'Content-Type': 'application/json' });
         var options = new __WEBPACK_IMPORTED_MODULE_1__angular_http__["d" /* RequestOptions */]({ headers: headers });
         return this.http.post('/api2/getFunctionData', bodyString, options).map(function (res) { return res.json(); });
+    };
+    GitHubService.prototype.getFunctionMetric = function (path) {
+        var bodyString = JSON.stringify({ "path": path });
+        var headers = new __WEBPACK_IMPORTED_MODULE_1__angular_http__["c" /* Headers */]({ 'Content-Type': 'application/json' });
+        var options = new __WEBPACK_IMPORTED_MODULE_1__angular_http__["d" /* RequestOptions */]({ headers: headers });
+        return this.http.post('/api2/getFunctionMetric', bodyString, options).map(function (res) { return res.json(); });
+    };
+    GitHubService.prototype.getDominantAuthor = function (block, path) {
+        var bodyString = JSON.stringify({ "path": path, "start": block[2], "end": block[5] });
+        var headers = new __WEBPACK_IMPORTED_MODULE_1__angular_http__["c" /* Headers */]({ 'Content-Type': 'application/json' });
+        var options = new __WEBPACK_IMPORTED_MODULE_1__angular_http__["d" /* RequestOptions */]({ headers: headers });
+        return this.http.post('/api2/getDominantAuthor', bodyString, options).map(function (res) { return res.json(); });
     };
     GitHubService.prototype.saveFileLOC = function (block) {
         var bodyString = JSON.stringify({ "start": block[0], "end": block[1] });
@@ -4131,7 +4151,7 @@ module.exports = "<router-outlet></router-outlet>\n"
 /***/ 705:
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"container-graph\">\n  <div class=\"lines-container\">\n    <svg class=\"lines\"></svg>\n  </div>\n  <div class=\"legend-container\">\n    <div class=\"legend\">\n      <h3>Legend:</h3>\n      <ul>\n        <li [style.color]=\"getAuthorColor(d.authormail)\"\n            *ngFor=\"let d of getLegend() | async\">\n          {{ d.authormail }}\n        </li>\n      </ul>\n    </div>\n  </div>\n</div>\n"
+module.exports = "<div class=\"container-graph\">\n  <div class=\"lines-container\">\n    <svg class=\"lines\"></svg>\n  </div>\n  <div class=\"legend-container\">\n    <div class=\"legend\">\n      <h3>Legend:</h3>\n      <ul>\n        <li [style.color]=\"getAuthorColor(d.personid)\"\n            *ngFor=\"let d of getLegend() | async\">\n          {{ d.personid }}\n        </li>\n      </ul>\n    </div>\n  </div>\n</div>\n"
 
 /***/ }),
 
@@ -4166,7 +4186,7 @@ module.exports = "<p>\n  treemap works!\n</p>\n"
 /***/ 710:
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"container-graph\">\n  <div class=\"lines-container\">\n    <svg class=\"lines\"></svg>\n  </div>\n  <div class=\"legend-container\">\n    <div class=\"legend\">\n      <input #path >\n      <button (click)=\"renderChart(path.value)\">Submit</button>\n      <h3>Legend:</h3>\n      <ul>\n        <li [style.color]=\"getAuthorColor(d.authormail)\"\n            *ngFor=\"let d of getLegend() | async\">\n          {{ d.authormail }}\n        </li>\n      </ul>\n    </div>\n  </div>\n</div>\n"
+module.exports = "<div class=\"container-graph\">\n  <div class=\"lines-container\">\n    <svg class=\"lines\"></svg>\n  </div>\n  <div class=\"legend-container\">\n    <div class=\"legend\">\n      <input #path >\n      <button (click)=\"renderChart(path.value)\">Submit</button>\n      <h3>Legend:</h3>\n      <ul>\n        <li [style.color]=\"getAuthorColor(d.personid)\"\n            *ngFor=\"let d of getLegend() | async\">\n          {{ d.personid }}\n        </li>\n      </ul>\n    </div>\n  </div>\n</div>\n"
 
 /***/ }),
 
@@ -7062,6 +7082,297 @@ StyleDirective.propDecorators = {
 
 module.exports = __webpack_require__(324);
 
+
+/***/ }),
+
+/***/ 997:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_d3_ng2_service__ = __webpack_require__(70);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__git_hub_service__ = __webpack_require__(41);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs__ = __webpack_require__(107);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_rxjs__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return FunctionMetricComponent; });
+/* unused harmony export colors */
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+
+
+
+var FunctionMetricComponent = (function () {
+    function FunctionMetricComponent(_element, _d3Service, gitHubService) {
+        this._element = _element;
+        this._d3Service = _d3Service;
+        this.gitHubService = gitHubService;
+        this.width = 700;
+        this.height = 800;
+        this.authorMap = new Map();
+        this.uniqueAuthors = ["others"];
+        this.funData = [];
+        this._d3 = this._d3Service.getD3();
+        this._parentNativeElement = this._element.nativeElement;
+    }
+    FunctionMetricComponent.prototype.ngOnInit = function () {
+        this.renderChart("attr.c");
+    };
+    FunctionMetricComponent.prototype.renderChart = function (value) {
+        var _this = this;
+        if (value)
+            this.gitHubService.getFunctionMetric(value).subscribe(function (dataArr) {
+                _this.funData = dataArr[0];
+                var data = dataArr[1];
+                var d3 = _this._d3;
+                var d3ParentElement;
+                var d3G;
+                var path = data["path"];
+                if (_this._parentNativeElement !== null) {
+                    d3ParentElement = d3.select(_this._parentNativeElement);
+                    _this._d3Svg = d3ParentElement.select('svg');
+                    _this._d3Svg.selectAll('g').remove();
+                    d3G = _this._d3G = _this._d3Svg.append('g');
+                    var screenHeight = (Number(data["lines-count"]) * 1.5) + 2;
+                    _this._d3Svg.attr('width', _this.width);
+                    _this._d3Svg.attr('height', screenHeight);
+                    var lineStrokeWidth_1 = screenHeight / data["lines-count"];
+                    var widthSumY1_1 = 0;
+                    var widthSumY2_1 = 0;
+                    _this._d3G.selectAll('line')
+                        .data(data.lines)
+                        .enter()
+                        .append('line')
+                        .attr("x1", function (d) {
+                        return 0;
+                    })
+                        .attr("y1", function (d) {
+                        widthSumY1_1 = widthSumY1_1 + lineStrokeWidth_1;
+                        return widthSumY1_1;
+                    })
+                        .attr("x2", function (d) {
+                        return d.contentlength * 5;
+                    })
+                        .attr("y2", function (d) {
+                        widthSumY2_1 = widthSumY2_1 + lineStrokeWidth_1;
+                        return widthSumY2_1;
+                    })
+                        .attr("stroke-width", 1)
+                        .attr("stroke", function (d) {
+                        var functionCheck = _this.isLinePartOfFunction(d);
+                        if (functionCheck[0]) {
+                            return _this.getAuthorColor(functionCheck[1][6][0]);
+                        }
+                        else {
+                            return _this.getAuthorColor("others");
+                        }
+                    })
+                        .append("title")
+                        .text(function (d) {
+                        var functionCheck = _this.isLinePartOfFunction(d);
+                        if (functionCheck[0]) {
+                            return functionCheck[1][6][0] + " --- " + functionCheck[1][4];
+                        }
+                        else {
+                            return "others";
+                        }
+                    });
+                }
+            });
+    };
+    FunctionMetricComponent.prototype.isLinePartOfFunction = function (d) {
+        var flag = [];
+        flag[0] = false;
+        this.funData.forEach(function (fd) {
+            if (d.finalline >= Number(fd[2]) && d.finalline <= Number(fd[5])) {
+                flag[0] = true;
+                flag[1] = fd;
+            }
+        });
+        return flag;
+    };
+    FunctionMetricComponent.prototype.getAuthorColor = function (author) {
+        if (author == "others") {
+            this.authorMap.set(author, this.hslToHex(0, 0, 75));
+        }
+        if (this.authorMap.get(author)) {
+            return this.authorMap.get(author);
+        }
+        else {
+            this.uniqueAuthors.push(author);
+            var mapSize = this.authorMap.size;
+            if (mapSize >= colors.length) {
+                var rand = colors[Math.floor(Math.random() * colors.length)];
+                var colorArr = rand.split(",");
+                this.authorMap.set(author, this.hslToHex(colorArr[0], colorArr[1], colorArr[2]));
+                return this.authorMap.get(author);
+            }
+            else {
+                var colorArr = colors[mapSize].split(",");
+                this.authorMap.set(author, this.hslToHex(colorArr[0], colorArr[1], colorArr[2]));
+                return this.authorMap.get(author);
+            }
+        }
+    };
+    FunctionMetricComponent.prototype.getLegend = function () {
+        return __WEBPACK_IMPORTED_MODULE_3_rxjs__["Observable"].of(this.uniqueAuthors);
+    };
+    FunctionMetricComponent.prototype.hslToHex = function (h, s, l) {
+        h /= 360;
+        s /= 100;
+        l /= 100;
+        var r, g, b;
+        if (s === 0) {
+            r = g = b = l; // achromatic
+        }
+        else {
+            var hue2rgb = function (p, q, t) {
+                if (t < 0)
+                    t += 1;
+                if (t > 1)
+                    t -= 1;
+                if (t < 1 / 6)
+                    return p + (q - p) * 6 * t;
+                if (t < 1 / 2)
+                    return q;
+                if (t < 2 / 3)
+                    return p + (q - p) * (2 / 3 - t) * 6;
+                return p;
+            };
+            var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            var p = 2 * l - q;
+            r = hue2rgb(p, q, h + 1 / 3);
+            g = hue2rgb(p, q, h);
+            b = hue2rgb(p, q, h - 1 / 3);
+        }
+        var toHex = function (x) {
+            var hex = Math.round(x * 255).toString(16);
+            return hex.length === 1 ? '0' + hex : hex;
+        };
+        return "#" + toHex(r) + toHex(g) + toHex(b);
+    };
+    return FunctionMetricComponent;
+}());
+__decorate([
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["M" /* Input */])(),
+    __metadata("design:type", Number)
+], FunctionMetricComponent.prototype, "width", void 0);
+__decorate([
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["M" /* Input */])(),
+    __metadata("design:type", Number)
+], FunctionMetricComponent.prototype, "height", void 0);
+FunctionMetricComponent = __decorate([
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_14" /* Component */])({
+        selector: 'app-function-metric',
+        template: __webpack_require__(999),
+        styles: [__webpack_require__(998)]
+    }),
+    __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_0__angular_core__["K" /* ElementRef */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_0__angular_core__["K" /* ElementRef */]) === "function" && _a || Object, typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_1_d3_ng2_service__["a" /* D3Service */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_d3_ng2_service__["a" /* D3Service */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_2__git_hub_service__["a" /* GitHubService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__git_hub_service__["a" /* GitHubService */]) === "function" && _c || Object])
+], FunctionMetricComponent);
+
+var colors = [
+    "000, 000, 000",
+    "017, 097, 044",
+    "208, 068, 052",
+    "316, 056, 025",
+    "104, 044, 045",
+    "329, 089, 037",
+    "247, 087, 031",
+    "182, 082, 033",
+    "312, 092, 028",
+    "034, 094, 053",
+    "156, 096, 032",
+    "351, 031, 051",
+    "338, 078, 051",
+    "169, 049, 031",
+    "273, 073, 050",
+    "021, 061, 036",
+    "173, 093, 047",
+    "091, 091, 047",
+    "073, 033, 025",
+    "342, 042, 041",
+    "238, 098, 052",
+    "190, 090, 026",
+    "099, 099, 027",
+    "277, 037, 029",
+    "117, 077, 029",
+    "234, 054, 025",
+    "143, 063, 046",
+    "108, 088, 037",
+    "177, 057, 035",
+    "095, 055, 033",
+    "286, 026, 028",
+    "086, 066, 037",
+    "039, 039, 026",
+    "325, 045, 032",
+    "260, 040, 025",
+    "047, 047, 051",
+    "290, 070, 040",
+    "121, 041, 035",
+    "043, 083, 040",
+    "008, 028, 041",
+    "164, 024, 031",
+    "147, 027, 047",
+    "199, 079, 038",
+    "355, 075, 025",
+    "303, 023, 047",
+    "186, 046, 047",
+    "004, 064, 041",
+    "056, 036, 050",
+    "026, 086, 039",
+    "212, 032, 044",
+    "065, 025, 045",
+    "134, 074, 042",
+    "299, 059, 039",
+    "160, 060, 026",
+    "125, 085, 025",
+    "013, 053, 050",
+    "030, 050, 040",
+    "195, 035, 030",
+    "112, 052, 031",
+    "151, 071, 039",
+    "078, 058, 049",
+    "225, 065, 028",
+    "264, 084, 044",
+    "221, 021, 041",
+    "138, 038, 052",
+    "251, 051, 036",
+    "082, 022, 032)"
+];
+var _a, _b, _c;
+//# sourceMappingURL=function-metric.component.js.map
+
+/***/ }),
+
+/***/ 998:
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(19)();
+// imports
+
+
+// module
+exports.push([module.i, ".container-graph {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 auto;\n          flex: 1 1 auto;\n}\n.lines-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 70%;\n          flex: 1 1 70%;\n}\n.legend-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 30%;\n          flex: 1 1 30%;\n}\n.lines {\n  padding-left: 0px;\n}\n.legend {\n  padding-left: 0px;\n}\n.legend ul{\n  margin: 0px;\n  list-style: none;\n}\n.legend ul li:before {\n  content: \"\\2022\";\n  font-size: 170%;\n}\n", ""]);
+
+// exports
+
+
+/*** EXPORTS FROM exports-loader ***/
+module.exports = module.exports.toString();
+
+/***/ }),
+
+/***/ 999:
+/***/ (function(module, exports) {
+
+module.exports = "<div class=\"container-graph\">\n  <div class=\"lines-container\">\n    <svg class=\"lines\"></svg>\n  </div>\n  <div class=\"legend-container\">\n    <div class=\"legend\">\n      <input #path >\n      <button (click)=\"renderChart(path.value)\">Submit</button>\n      <h3>Legend: Person Id</h3>\n      <ul>\n        <li [style.color]=\"getAuthorColor(d)\"\n            *ngFor=\"let d of getLegend() | async\">\n          {{ d }}\n        </li>\n      </ul>\n    </div>\n  </div>\n</div>\n"
 
 /***/ })
 

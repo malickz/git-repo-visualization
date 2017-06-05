@@ -4,11 +4,13 @@
   </div>
   <div class="legend-container">
     <div class="legend">
-      <h3>Legend:</h3>
+      <input #path >
+      <button (click)="renderChart(path.value)">Submit</button>
+      <h3>Legend: Person Id</h3>
       <ul>
-        <li [style.color]="getAuthorColor(d.personid)"
+        <li [style.color]="getAuthorColor(d)"
             *ngFor="let d of getLegend() | async">
-          {{ d.personid }}
+          {{ d }}
         </li>
       </ul>
     </div>

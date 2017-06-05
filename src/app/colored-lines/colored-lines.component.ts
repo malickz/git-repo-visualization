@@ -40,14 +40,14 @@ export class ColoredLinesComponent implements OnInit {
       let authorCount: number = 0;
 
       data.lines.forEach(line => {
-        if (!authorLookup.get(line.authormail)) {
+        if (!authorLookup.get(line.personid)) {
           data.lines.forEach(line2 => {
-            if(line.authormail === line2.authormail) {
+            if(line.personid === line2.personid) {
               authorCount++;
             }
           });
-          authorLookup.set(line.authormail, authorCount);
-          authorLookupArray.push([line.authormail, authorCount]);
+          authorLookup.set(line.personid, authorCount);
+          authorLookupArray.push([line.personid, authorCount]);
           authorCount = 0;
         }
       });
@@ -56,18 +56,18 @@ export class ColoredLinesComponent implements OnInit {
         return b[1] > a[1] ? 1 : -1;
       }).forEach(a => {
         data.lines.forEach(line => {
-          if(a[0] === line.authormail) {
+          if(a[0] === line.personid) {
             sortedDataByMaxAuthor.push(line); // stack the lines as per sorted authors list, author with more lines comes at top and then the one with 2nd less lines
           }
         });
       });
 
       this.uniqueAuthors = sortedDataByMaxAuthor.map(auth=> {
-        return auth.authormail
+        return auth.personid
       }).filter((elem, index, self) => {
         return index == self.indexOf(elem);
       }).map((auth) => {
-        return {"authormail": auth}
+        return {"personid": auth}
       });
 
       if (this._parentNativeElement !== null) {
@@ -108,10 +108,10 @@ export class ColoredLinesComponent implements OnInit {
             })
             .attr("stroke-width", widthLine)
             .attr("stroke", (d: any) => {
-              return this.getAuthorColor(d.authormail);
+              return this.getAuthorColor(d.personid);
             })
             .append("title").text((d: any) => {
-            return d.authormail;
+            return d.personid;
           });
 
         } else {
@@ -138,7 +138,7 @@ export class ColoredLinesComponent implements OnInit {
               return widthSumY1;
             })
             .attr("x2", (d: any) => {
-              return d.contentlength * 7;
+              return 600;
             })
             .attr("y2", (d: any) => {
               widthSumY2 = widthSumY2 + lineStrokeWidth;
@@ -146,10 +146,10 @@ export class ColoredLinesComponent implements OnInit {
             })
             .attr("stroke-width", 1)
             .attr("stroke", (d: any) => {
-              return this.getAuthorColor(d.authormail);
+              return this.getAuthorColor(d.personid);
             })
             .append("title").text((d: any) => {
-            return d.authormail;
+            return d.personid;
           });
         }
       }

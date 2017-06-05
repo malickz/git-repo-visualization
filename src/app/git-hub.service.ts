@@ -49,11 +49,29 @@ export class GitHubService {
     );
   }
 
-  public getFunctionData(path: string) {
-    let bodyString = JSON.stringify({"path": path});
+  public getFunctionData(path: string, lineData: boolean) {
+    let bodyString = JSON.stringify({"path": path, "lineData": lineData});
     let headers = new Headers({ 'Content-Type': 'application/json' });
     let options = new RequestOptions({ headers: headers });
     return this.http.post('/api2/getFunctionData', bodyString, options).map(
+      res => res.json()
+    );
+  }
+
+  public getFunctionMetric(path: string) {
+    let bodyString = JSON.stringify({"path": path});
+    let headers = new Headers({ 'Content-Type': 'application/json' });
+    let options = new RequestOptions({ headers: headers });
+    return this.http.post('/api2/getFunctionMetric', bodyString, options).map(
+      res => res.json()
+    );
+  }
+
+  public getDominantAuthor(block: Array<number>, path: string) {
+    let bodyString = JSON.stringify({"path": path, "start": block[2], "end": block[5]});
+    let headers = new Headers({ 'Content-Type': 'application/json' });
+    let options = new RequestOptions({ headers: headers });
+    return this.http.post('/api2/getDominantAuthor', bodyString, options).map(
       res => res.json()
     );
   }
