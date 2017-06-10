@@ -480,10 +480,12 @@ function callCTags(path) {
   tags.forEach((tag) => {
     let parts = tag[0].match(re);
     let tempParts = [];
-    for (let i = 1; i < parts.length; i++) {
-      tempParts.push(parts[i].trim());
+    if (parts) {
+      for (let i = 1; i < parts.length; i++) {
+        tempParts.push(parts[i].trim());
+      }
+      funData.push(tempParts);
     }
-    funData.push(tempParts);
   });
   return funData;
 }

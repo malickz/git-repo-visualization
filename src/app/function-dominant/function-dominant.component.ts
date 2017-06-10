@@ -20,6 +20,7 @@ export class FunctionDominantComponent implements OnInit {
   private authorMap: Map<string, string> = new Map<string, string>();
   private sortedDataByMaxFunctions: Array<any> = [];
   private uniqueAuthors: Array<any> = [];
+  private _innerHeight = window.innerHeight;
 
   constructor(private _element: ElementRef,
               private _d3Service: D3Service,
@@ -107,10 +108,10 @@ export class FunctionDominantComponent implements OnInit {
 
           let screenHeight: number =  (Number(data["lines-count"]) * 1.5) + 2;
 
-          this._d3Svg.attr('width', this.width);
-          this._d3Svg.attr('height', screenHeight);
+          this._d3Svg.attr('width', window.screen.width/2);
+          this._d3Svg.attr('height', window.innerHeight);
 
-          let lineStrokeWidth: number = screenHeight/data["lines-count"];
+          let lineStrokeWidth: number = window.innerHeight/data["lines-count"];
 
           let widthSumY1: number = 0;
           let widthSumY2: number = 0;
@@ -127,7 +128,7 @@ export class FunctionDominantComponent implements OnInit {
               return widthSumY1;
             })
             .attr("x2", (d: any) => { // length of line
-              return 700;
+              return 600;
             })
             .attr("y2", (d: any) => { // y/ vertical postion of line on right
               widthSumY2 = widthSumY2 + lineStrokeWidth;

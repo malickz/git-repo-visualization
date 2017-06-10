@@ -2118,7 +2118,8 @@ var ColoredLinesComponent = (function () {
         this.height = 800;
         this.authorMap = new Map();
         this.uniqueAuthors = [];
-        this.onePage = false;
+        this.onePage = true;
+        this._innerHeight = window.innerHeight;
         this._d3 = this._d3Service.getD3();
         this._parentNativeElement = this._element.nativeElement;
     }
@@ -2133,6 +2134,7 @@ var ColoredLinesComponent = (function () {
             var sortedDataByMaxAuthor = [];
             var path = data["path"];
             var authorCount = 0;
+            window.innerHeight;
             data.lines.forEach(function (line) {
                 if (!authorLookup.get(line.personid)) {
                     data.lines.forEach(function (line2) {
@@ -2166,8 +2168,8 @@ var ColoredLinesComponent = (function () {
                 _this._d3Svg = d3ParentElement.select('svg');
                 d3G = _this._d3G = _this._d3Svg.append('g');
                 if (_this.onePage) {
-                    _this._d3Svg.attr('width', window.screen.width);
-                    _this._d3Svg.attr('height', window.screen.height);
+                    _this._d3Svg.attr('width', window.screen.width / 2);
+                    _this._d3Svg.attr('height', window.innerHeight);
                     var widthLine_1 = window.screen.height / (Number(data["lines"][data["lines"].length - 1].finalline));
                     var widthSumY1_1 = 0;
                     var widthSumY2_1 = 0;
@@ -2183,7 +2185,8 @@ var ColoredLinesComponent = (function () {
                         return widthSumY1_1;
                     })
                         .attr("x2", function (d) {
-                        return d.contentlength * 7;
+                        //return d.contentlength * 7;
+                        return 600;
                     })
                         .attr("y2", function (d) {
                         widthSumY2_1 = widthSumY2_1 + widthLine_1;
@@ -2698,6 +2701,7 @@ var FunctionDominantComponent = (function () {
         this.authorMap = new Map();
         this.sortedDataByMaxFunctions = [];
         this.uniqueAuthors = [];
+        this._innerHeight = window.innerHeight;
         this._d3 = this._d3Service.getD3();
         this._parentNativeElement = this._element.nativeElement;
     }
@@ -2765,9 +2769,9 @@ var FunctionDominantComponent = (function () {
                     _this._d3Svg.selectAll('g').remove();
                     d3G = _this._d3G = _this._d3Svg.append('g');
                     var screenHeight = (Number(data["lines-count"]) * 1.5) + 2;
-                    _this._d3Svg.attr('width', _this.width);
-                    _this._d3Svg.attr('height', screenHeight);
-                    var lineStrokeWidth_1 = screenHeight / data["lines-count"];
+                    _this._d3Svg.attr('width', window.screen.width / 2);
+                    _this._d3Svg.attr('height', window.innerHeight);
+                    var lineStrokeWidth_1 = window.innerHeight / data["lines-count"];
                     var widthSumY1_1 = 0;
                     var widthSumY2_1 = 0;
                     _this._d3G.selectAll('line')
@@ -2782,7 +2786,7 @@ var FunctionDominantComponent = (function () {
                         return widthSumY1_1;
                     })
                         .attr("x2", function (d) {
-                        return 700;
+                        return 600;
                     })
                         .attr("y2", function (d) {
                         widthSumY2_1 = widthSumY2_1 + lineStrokeWidth_1;
@@ -3969,7 +3973,7 @@ exports = module.exports = __webpack_require__(19)();
 
 
 // module
-exports.push([module.i, ".container-graph {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 auto;\n          flex: 1 1 auto;\n}\n.lines-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 70%;\n          flex: 1 1 70%;\n}\n.legend-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 30%;\n          flex: 1 1 30%;\n}\n.lines {\n  padding-left: 0px;\n}\n.legend {\n  padding-left: 0px;\n}\n.legend ul{\n  margin: 0px;\n  list-style: none;\n}\n.legend ul li:before {\n  content: \"\\2022\";\n  font-size: 170%;\n}\n", ""]);
+exports.push([module.i, ".container-graph {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 auto;\n          flex: 1 1 auto;\n}\n.lines-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 70%;\n          flex: 1 1 70%;\n}\n.legend-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 30%;\n          flex: 1 1 30%;\n  overflow: auto;\n}\n.lines {\n  padding-left: 0px;\n}\n.legend {\n  padding-left: 0px;\n}\n.legend ul{\n  margin: 0px;\n  list-style: none;\n}\n.legend ul li:before {\n  content: \"\\2022\";\n  font-size: 170%;\n}\n", ""]);
 
 // exports
 
@@ -4059,7 +4063,7 @@ exports = module.exports = __webpack_require__(19)();
 
 
 // module
-exports.push([module.i, ".container-graph {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 auto;\n          flex: 1 1 auto;\n}\n.lines-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 70%;\n          flex: 1 1 70%;\n}\n.legend-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 30%;\n          flex: 1 1 30%;\n}\n.lines {\n  padding-left: 0px;\n}\n.legend {\n  padding-left: 0px;\n}\n.legend ul{\n  margin: 0px;\n  list-style: none;\n}\n.legend ul li:before {\n  content: \"\\2022\";\n  font-size: 170%;\n}\n", ""]);
+exports.push([module.i, ".container-graph {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 auto;\n          flex: 1 1 auto;\n}\n.lines-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 70%;\n          flex: 1 1 70%;\n}\n.legend-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 30%;\n          flex: 1 1 30%;\n  overflow: auto;\n}\n.lines {\n  padding-left: 0px;\n}\n.legend {\n  padding-left: 0px;\n}\n.legend ul{\n  margin: 0px;\n  list-style: none;\n}\n.legend ul li:before {\n  content: \"\\2022\";\n  font-size: 170%;\n}\n", ""]);
 
 // exports
 
@@ -4151,7 +4155,7 @@ module.exports = "<router-outlet></router-outlet>\n"
 /***/ 705:
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"container-graph\">\n  <div class=\"lines-container\">\n    <svg class=\"lines\"></svg>\n  </div>\n  <div class=\"legend-container\">\n    <div class=\"legend\">\n      <h3>Legend:</h3>\n      <ul>\n        <li [style.color]=\"getAuthorColor(d.personid)\"\n            *ngFor=\"let d of getLegend() | async\">\n          {{ d.personid }}\n        </li>\n      </ul>\n    </div>\n  </div>\n</div>\n"
+module.exports = "<div class=\"container-graph\">\n  <div class=\"lines-container\">\n    <svg class=\"lines\"></svg>\n  </div>\n  <div class=\"legend-container\" [ngStyle]=\"{'height':_innerHeight+'px'}\">\n    <div class=\"legend\">\n      <h3>Legend:</h3>\n      <ul>\n        <li [style.color]=\"getAuthorColor(d.personid)\"\n            *ngFor=\"let d of getLegend() | async\">\n          {{ d.personid }}\n        </li>\n      </ul>\n    </div>\n  </div>\n</div>\n"
 
 /***/ }),
 
@@ -4186,7 +4190,7 @@ module.exports = "<p>\n  treemap works!\n</p>\n"
 /***/ 710:
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"container-graph\">\n  <div class=\"lines-container\">\n    <svg class=\"lines\"></svg>\n  </div>\n  <div class=\"legend-container\">\n    <div class=\"legend\">\n      <input #path >\n      <button (click)=\"renderChart(path.value)\">Submit</button>\n      <h3>Legend:</h3>\n      <ul>\n        <li [style.color]=\"getAuthorColor(d.personid)\"\n            *ngFor=\"let d of getLegend() | async\">\n          {{ d.personid }}\n        </li>\n      </ul>\n    </div>\n  </div>\n</div>\n"
+module.exports = "<div class=\"container-graph\">\n  <div class=\"lines-container\">\n    <svg class=\"lines\"></svg>\n  </div>\n  <div class=\"legend-container\" [ngStyle]=\"{'height':_innerHeight+'px'}\">\n    <div class=\"legend\">\n      <input #path >\n      <button (click)=\"renderChart(path.value)\">Submit</button>\n      <h3>Legend:</h3>\n      <ul>\n        <li [style.color]=\"getAuthorColor(d.personid)\"\n            *ngFor=\"let d of getLegend() | async\">\n          {{ d.personid }}\n        </li>\n      </ul>\n    </div>\n  </div>\n</div>\n"
 
 /***/ }),
 
@@ -7131,6 +7135,15 @@ var FunctionMetricComponent = (function () {
             this.gitHubService.getFunctionMetric(value).subscribe(function (dataArr) {
                 _this.funData = dataArr[0];
                 var data = dataArr[1];
+                _this.funData.forEach(function (f, fInd) {
+                    data.lines.forEach(function (d, dInd, lines) {
+                        if (d.finalline == f[5]) {
+                            lines.splice(dInd + 1, 0, {
+                                "break": true
+                            });
+                        }
+                    });
+                });
                 var d3 = _this._d3;
                 var d3ParentElement;
                 var d3G;
@@ -7154,34 +7167,63 @@ var FunctionMetricComponent = (function () {
                         return 0;
                     })
                         .attr("y1", function (d) {
-                        widthSumY1_1 = widthSumY1_1 + lineStrokeWidth_1;
-                        return widthSumY1_1;
-                    })
-                        .attr("x2", function (d) {
-                        return d.contentlength * 5;
-                    })
-                        .attr("y2", function (d) {
-                        widthSumY2_1 = widthSumY2_1 + lineStrokeWidth_1;
-                        return widthSumY2_1;
-                    })
-                        .attr("stroke-width", 1)
-                        .attr("stroke", function (d) {
-                        var functionCheck = _this.isLinePartOfFunction(d);
-                        if (functionCheck[0]) {
-                            return _this.getAuthorColor(functionCheck[1][6][0]);
+                        if (!d.hasOwnProperty("break")) {
+                            widthSumY1_1 = widthSumY1_1 + lineStrokeWidth_1;
+                            return widthSumY1_1;
                         }
                         else {
-                            return _this.getAuthorColor("others");
+                            return widthSumY1_1 + lineStrokeWidth_1;
+                        }
+                    })
+                        .attr("x2", function (d) {
+                        if (!d.hasOwnProperty("break")) {
+                            return d.contentlength * 5;
+                        }
+                        else {
+                            return 600;
+                        }
+                    })
+                        .attr("y2", function (d) {
+                        if (!d.hasOwnProperty("break")) {
+                            widthSumY2_1 = widthSumY2_1 + lineStrokeWidth_1;
+                            return widthSumY2_1;
+                        }
+                        else {
+                            return widthSumY2_1 + lineStrokeWidth_1;
+                        }
+                    })
+                        .attr("stroke-width", function (d) {
+                        if (!d.hasOwnProperty("break")) {
+                            return 1;
+                        }
+                        else {
+                            return 2;
+                        }
+                    })
+                        .attr("stroke", function (d) {
+                        if (!d.hasOwnProperty("break")) {
+                            var functionCheck = _this.isLinePartOfFunction(d);
+                            if (functionCheck[0]) {
+                                return _this.getAuthorColor(functionCheck[1][6][0]);
+                            }
+                            else {
+                                return _this.getAuthorColor("others");
+                            }
+                        }
+                        else {
+                            return "black";
                         }
                     })
                         .append("title")
                         .text(function (d) {
-                        var functionCheck = _this.isLinePartOfFunction(d);
-                        if (functionCheck[0]) {
-                            return functionCheck[1][6][0] + " --- " + functionCheck[1][4];
-                        }
-                        else {
-                            return "others";
+                        if (!d.hasOwnProperty("break")) {
+                            var functionCheck = _this.isLinePartOfFunction(d);
+                            if (functionCheck[0]) {
+                                return functionCheck[1][6][0] + " --- " + functionCheck[1][4];
+                            }
+                            else {
+                                return "others";
+                            }
                         }
                     });
                 }

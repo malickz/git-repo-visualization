@@ -38,6 +38,17 @@ export class FunctionMetricComponent implements OnInit {
         this.funData = dataArr[0];
         let data = dataArr[1];
 
+        this.funData.forEach((f, fInd)=> { // adds extra object in data.lines for clustering black line.
+          data.lines.forEach((d, dInd, lines)=> {
+            if (d.finalline == f[5]) {
+              lines.splice(dInd+1, 0, {
+                "break" : true
+              });
+            }
+          });
+        });
+
+
         let d3 = this._d3;
         let d3ParentElement: Selection<HTMLElement, any, any, any>;
         let d3G: Selection<SVGGElement, any, null, undefined>;
@@ -71,32 +82,56 @@ export class FunctionMetricComponent implements OnInit {
               return 0;
             })
             .attr("y1", (d: any) => { // y/ vertical postion of line on left
-              widthSumY1 = widthSumY1 + lineStrokeWidth;
-              return widthSumY1;
+              if (!d.hasOwnProperty("break")){
+                widthSumY1 = widthSumY1 + lineStrokeWidth;
+                return widthSumY1;
+              } else {
+                return widthSumY1 + lineStrokeWidth;
+              }
             })
             .attr("x2", (d: any) => { // length of line
-              return d.contentlength * 5;
+              if (!d.hasOwnProperty("break")){
+                return d.contentlength * 5;
+              } else {
+                return 600;
+              }
             })
             .attr("y2", (d: any) => { // y/ vertical position of line on right
-              widthSumY2 = widthSumY2 + lineStrokeWidth;
-              return widthSumY2;
-            })
-            .attr("stroke-width", 1)
-            .attr("stroke", (d: any) => {
-              let functionCheck = this.isLinePartOfFunction(d);
-              if(functionCheck[0]) {
-                return this.getAuthorColor(functionCheck[1][6][0]);
+              if (!d.hasOwnProperty("break")){
+                widthSumY2 = widthSumY2 + lineStrokeWidth;
+                return widthSumY2;
               } else {
-                return this.getAuthorColor("others");
+                return widthSumY2 + lineStrokeWidth
+              }
+            })
+            .attr("stroke-width", (d: any) => {
+              if (!d.hasOwnProperty("break")){
+                return 1;
+              } else {
+                return 2;
+              }
+            })
+            .attr("stroke", (d: any) => {
+              if (!d.hasOwnProperty("break")) {
+                let functionCheck = this.isLinePartOfFunction(d);
+                if (functionCheck[0]) {
+                  return this.getAuthorColor(functionCheck[1][6][0]);
+                } else {
+                  return this.getAuthorColor("others");
+                }
+              } else {
+                return "black";
               }
             })
             .append("title")
             .text((d: any) => {
-              let functionCheck = this.isLinePartOfFunction(d);
-              if(functionCheck[0]) {
-                return functionCheck[1][6][0] + " --- " + functionCheck[1][4];
-              } else {
-                return "others";
+              if (!d.hasOwnProperty("break")) {
+                let functionCheck = this.isLinePartOfFunction(d);
+                if (functionCheck[0]) {
+                  return functionCheck[1][6][0] + " --- " + functionCheck[1][4];
+                } else {
+                  return "others";
+                }
               }
             });
         }

@@ -7,6 +7,7 @@
 }
 .legend-container {
   flex: 1 1 30%;
+  overflow: auto;
 }
 .lines {
   padding-left: 0px;

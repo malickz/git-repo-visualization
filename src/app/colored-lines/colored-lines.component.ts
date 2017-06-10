@@ -19,7 +19,8 @@ export class ColoredLinesComponent implements OnInit {
   private _d3G: Selection<SVGGElement, any, null, undefined>;
   private authorMap: Map<string, string> = new Map<string, string>();
   private uniqueAuthors: Array<any> = [];
-  private onePage: boolean = false;
+  private onePage: boolean = true;
+  private _innerHeight = window.innerHeight;
 
   constructor(private _element: ElementRef,
               private _d3Service: D3Service,
@@ -38,6 +39,8 @@ export class ColoredLinesComponent implements OnInit {
       let sortedDataByMaxAuthor: Array<any> = [];
       let path: string = data["path"];
       let authorCount: number = 0;
+
+      window.innerHeight;
 
       data.lines.forEach(line => {
         if (!authorLookup.get(line.personid)) {
@@ -80,8 +83,8 @@ export class ColoredLinesComponent implements OnInit {
         d3G = this._d3G = this._d3Svg.append<SVGGElement>('g');
 
         if (this.onePage) {
-          this._d3Svg.attr('width', window.screen.width);
-          this._d3Svg.attr('height', window.screen.height);
+          this._d3Svg.attr('width', window.screen.width/2);
+          this._d3Svg.attr('height', window.innerHeight);
 
           let widthLine: number = window.screen.height/(Number(data["lines"][data["lines"].length-1].finalline));
 
@@ -100,7 +103,8 @@ export class ColoredLinesComponent implements OnInit {
               return widthSumY1;
             })
             .attr("x2", (d: any) => {
-              return d.contentlength * 7;
+              //return d.contentlength * 7;
+              return 600;
             })
             .attr("y2", (d: any) => {
               widthSumY2 = widthSumY2 + widthLine;
