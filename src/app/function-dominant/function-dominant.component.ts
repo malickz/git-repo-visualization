@@ -2,6 +2,7 @@ import {Component, ElementRef, Input, OnInit} from '@angular/core';
 import { D3Service, D3, Selection } from 'd3-ng2-service';
 import {GitHubService} from "../git-hub.service";
 import {Observable} from "rxjs/Rx";
+import {ActivatedRoute} from "@angular/router";
 
 @Component({
   selector: 'app-function-dominant',
@@ -18,19 +19,28 @@ export class FunctionDominantComponent implements OnInit {
   private _d3Svg: Selection<SVGSVGElement, any, null, undefined>;
   private _d3G: Selection<SVGGElement, any, null, undefined>;
   private authorMap: Map<string, string> = new Map<string, string>();
-  private sortedDataByMaxFunctions: Array<any> = [];
   private uniqueAuthors: Array<any> = [];
   private _innerHeight = window.innerHeight;
+  public id: string;
+  private sub: any;
 
   constructor(private _element: ElementRef,
               private _d3Service: D3Service,
-              private gitHubService: GitHubService) {
+              private gitHubService: GitHubService,
+              private route: ActivatedRoute) {
     this._d3 = this._d3Service.getD3();
     this._parentNativeElement = this._element.nativeElement;
   }
 
   ngOnInit() {
-    this.renderChart("diff.c");
+    $(".loading").show();
+    this.sub = this.route.params.subscribe(params => {
+      this.id = params['id'];
+
+      let fileName: string = this.id ? this.id : "README.md";
+      this.renderChart(fileName);
+
+    });
   }
 
   public renderChart(value: string) {
@@ -141,6 +151,7 @@ export class FunctionDominantComponent implements OnInit {
             .append("title").text((d: any) => {
             return d.personid + " *** " + d.functionName;
           });
+          $(".loading").hide();
         }
       });
   }

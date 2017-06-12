@@ -1,0 +1,12 @@
+<div class="file-tree-container">
+  <div class="left-side">
+    <tree-root [nodes]="nodes" [options]="options"
+               (onActivate)="onClick($event)">
+    </tree-root>
+  </div>
+  <div class="right-side">
+    <app-visual-selection
+      [fileName]="fileName">
+    </app-visual-selection>
+  </div>
+</div>

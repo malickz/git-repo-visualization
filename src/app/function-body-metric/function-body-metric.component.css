@@ -1,0 +1,25 @@
+.container-graph {
+  display: flex;
+  flex: 1 1 auto;
+}
+.lines-container {
+  flex: 1 1 70%;
+}
+.legend-container {
+  flex: 1 1 30%;
+  overflow: auto;
+}
+.lines {
+  padding-left: 0px;
+}
+.legend {
+  padding-left: 0px;
+}
+.legend ul{
+  margin: 0px;
+  list-style: none;
+}
+.legend ul li:before {
+  content: "•";
+  font-size: 170%;
+}

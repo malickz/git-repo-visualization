@@ -21,7 +21,7 @@ export class GitHubService {
   }
 
   public getTreeJson() {
-    return this.http.get('/api/getTreeJSON')
+    return this.http.get('/api2/getTreeJSON')
       .map(res => res.json());
   }
 

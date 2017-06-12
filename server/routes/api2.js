@@ -56,6 +56,10 @@ router.post('/getLineData', function(req, res) {
 router.post('/getFunctionData', function(req, res) {
   getFunctionData(req, res);
 });
+
+router.get('/getTreeJSON', function(req, res) {
+  getTreeJson(res);
+});
 //
 // router.post('/getDominantAuthor', function(req, res) {
 //   db.all("select DISTINCT line_blame_info.finalline, line_blame_info.path, line_blame_info.contentlength, commits.authormail, commits.authorname from line_blame_info join commits on line_blame_info.sha = commits.sha where line_blame_info.path = '" + req.param("path") + "' and finalline between "+ req.param("start") + " and " + req.param("end"), (err, result) => {
@@ -553,6 +557,49 @@ function getDominantAuthor(req, res, path, cb) {
       });
     });
   });
+}
+
+function getTreeJson(res) {
+    db.all("select * from tree_structure order by fid asc", function(err, result) {
+      if (err) {
+        console.error('error running update query' + err);
+        return res.status(500).json(err);
+      }
+      let hierarchy = [];
+
+      result.unshift({
+        "path": "root",
+        "loc": 0,
+        "fid": 0,
+        "parent": null,
+        "filename": "root"
+      });
+
+      let dataMap = result.reduce(function(map, node) {
+        map[node.path] = node;
+        return map;
+      }, {});
+
+      result.forEach(function(node) {
+        Object.defineProperty(node, "id",
+          Object.getOwnPropertyDescriptor(node, "fid"));
+        delete node["fid"];
+
+        Object.defineProperty(node, "name",
+          Object.getOwnPropertyDescriptor(node, "path"));
+        delete node["path"];
+
+        let parent = dataMap[node.parent];
+        if (parent) {
+          (parent.children || (parent.children = [])).push(node);
+        } else {
+          hierarchy.push(node);
+        }
+      });
+      dataMap = undefined;
+      result = undefined;
+      res.status(200).json(hierarchy);
+    });
 }
 
 module.exports = router;

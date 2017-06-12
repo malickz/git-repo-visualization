@@ -6,11 +6,11 @@
     <div class="legend">
       <input #path >
       <button (click)="renderChart(path.value)">Submit</button>
-      <h3>Legend: Person Id</h3>
+      <h3>Summary: Person Id *** No. of functions</h3>
       <ul>
-        <li [style.color]="getAuthorColor(d)"
+        <li [style.color]="getAuthorColor(d[0])"
             *ngFor="let d of getLegend() | async">
-          {{ d }}
+          {{ d[0] }} *** {{ d[1] }}
         </li>
       </ul>
     </div>

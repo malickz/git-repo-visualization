@@ -22,6 +22,11 @@ import { ColoredLinesComponent } from './colored-lines/colored-lines.component';
 import { FunctionDominantComponent } from './function-dominant/function-dominant.component';
 import {FlexLayoutModule} from "../../server/tmp/node_modules/@angular/flex-layout";
 import { FunctionMetricComponent } from './function-metric/function-metric.component';
+import { FunctionBodyMetricComponent } from './function-body-metric/function-body-metric.component';
+import { FilesTreeComponent } from './files-tree/files-tree.component';
+import {TreeModule} from "angular2-tree-component";
+import * as $ from 'jquery';
+import { VisualSelectionComponent } from './visual-selection/visual-selection.component';
 
 // Define the routes
 const ROUTES = [
@@ -58,13 +63,32 @@ const ROUTES = [
     path: 'lineGraph',
     component: ColoredLinesComponent
   },
+  { path: 'lineGraph/:id',
+    component: ColoredLinesComponent
+  },
   {
     path: 'lineGraphFun',
     component: FunctionDominantComponent
   },
   {
+    path: 'lineGraphFun/:id',
+    component: FunctionDominantComponent
+  },
+  {
     path: 'functionDominance',
     component: FunctionMetricComponent
+  },
+  {
+    path: 'functionDominance/:id',
+    component: FunctionMetricComponent
+  },
+  {
+    path: 'functionDominanceBody',
+    component: FunctionBodyMetricComponent
+  },
+  {
+    path: 'main',
+    component: FilesTreeComponent
   }
 ];
 
@@ -82,13 +106,17 @@ const ROUTES = [
     SunburstComponent,
     ColoredLinesComponent,
     FunctionDominantComponent,
-    FunctionMetricComponent
+    FunctionMetricComponent,
+    FunctionBodyMetricComponent,
+    FilesTreeComponent,
+    VisualSelectionComponent
   ],
   imports: [
     BrowserModule,
     FormsModule,
     HttpModule,
     FlexLayoutModule,
+    TreeModule,
     RouterModule.forRoot(ROUTES) // Add routes to the app
   ],
   providers: [

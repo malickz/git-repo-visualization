@@ -2,6 +2,7 @@ import {Component, ElementRef, Input, OnInit} from '@angular/core';
 import {D3Service, D3, Selection } from 'd3-ng2-service';
 import {GitHubService} from "../git-hub.service";
 import {Observable} from "rxjs";
+import {ActivatedRoute} from "@angular/router";
 
 @Component({
   selector: 'app-function-metric',
@@ -18,18 +19,28 @@ export class FunctionMetricComponent implements OnInit {
   private _d3Svg: Selection<SVGSVGElement, any, null, undefined>;
   private _d3G: Selection<SVGGElement, any, null, undefined>;
   private authorMap: Map<string, string> = new Map<string, string>();
-  private uniqueAuthors: Array<any> = ["others"];
+  private uniqueAuthors: Array<any> = [];
   private funData: Array<any> = [];
+  public id: string;
+  private sub: any;
 
   constructor(private _element: ElementRef,
               private _d3Service: D3Service,
-              private gitHubService: GitHubService) {
+              private gitHubService: GitHubService,
+              private route: ActivatedRoute) {
     this._d3 = this._d3Service.getD3();
     this._parentNativeElement = this._element.nativeElement;
   }
 
   ngOnInit() {
-    this.renderChart("attr.c");
+    $(".loading").show();
+    this.sub = this.route.params.subscribe(params => {
+      this.id = params['id'];
+
+      let fileName: string = this.id ? this.id : "README.md";
+      this.renderChart(fileName);
+
+    });
   }
 
   public renderChart(value: string) {
@@ -37,6 +48,10 @@ export class FunctionMetricComponent implements OnInit {
       this.gitHubService.getFunctionMetric(value).subscribe((dataArr: any) => {
         this.funData = dataArr[0];
         let data = dataArr[1];
+
+        let authorCount: number = 0;
+        let authorLookup: Map<string, number> = new Map<string, number>();
+        this.uniqueAuthors = [];
 
         this.funData.forEach((f, fInd)=> { // adds extra object in data.lines for clustering black line.
           data.lines.forEach((d, dInd, lines)=> {
@@ -46,6 +61,20 @@ export class FunctionMetricComponent implements OnInit {
               });
             }
           });
+        });
+
+
+        this.funData.forEach(line => { // get the count of function per author
+          if (!authorLookup.get(line[line.length-1][0])) {
+            this.funData.forEach(line2 => {
+              if(line[line.length-1][0] === line2[line2.length-1][0]) {
+                authorCount++;
+              }
+            });
+            authorLookup.set(line[line.length-1][0], authorCount);
+            this.uniqueAuthors.push([line[line.length-1][0], authorCount, line]);
+            authorCount = 0;
+          }
         });
 
 
@@ -81,7 +110,7 @@ export class FunctionMetricComponent implements OnInit {
             .attr("x1", (d: any) => { // start point of line
               return 0;
             })
-            .attr("y1", (d: any) => { // y/ vertical postion of line on left
+            .attr("y1", (d: any) => { // y/ vertical position of line on left
               if (!d.hasOwnProperty("break")){
                 widthSumY1 = widthSumY1 + lineStrokeWidth;
                 return widthSumY1;
@@ -135,6 +164,7 @@ export class FunctionMetricComponent implements OnInit {
               }
             });
         }
+        $(".loading").hide();
       });
   }
 
@@ -157,7 +187,7 @@ export class FunctionMetricComponent implements OnInit {
     if (this.authorMap.get(author)) {
       return this.authorMap.get(author);
     } else {
-      this.uniqueAuthors.push(author);
+      //this.uniqueAuthors.push(author);
       let mapSize: number = this.authorMap.size;
       if (mapSize >= colors.length) {
         let rand = colors[Math.floor(Math.random() * colors.length)];

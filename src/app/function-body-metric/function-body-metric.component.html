@@ -1,0 +1,18 @@
+<div class="container-graph">
+  <div class="lines-container">
+    <svg class="lines"></svg>
+  </div>
+  <div class="legend-container" [ngStyle]="{'height':_innerHeight+'px'}">
+    <div class="legend">
+      <input #path >
+      <button (click)="renderChart(path.value)">Submit</button>
+      <h3>Legend:</h3>
+      <ul>
+        <li [style.color]="getAuthorColor(d.personid)"
+            *ngFor="let d of getLegend() | async">
+          {{ d.personid }}
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>

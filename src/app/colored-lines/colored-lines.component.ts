@@ -2,6 +2,7 @@ import {Component, ElementRef, Input, OnInit} from '@angular/core';
 import { D3Service, D3, Selection } from 'd3-ng2-service';
 import {GitHubService} from "../git-hub.service";
 import {Observable} from "rxjs/Rx";
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-colored-lines',
@@ -21,144 +22,153 @@ export class ColoredLinesComponent implements OnInit {
   private uniqueAuthors: Array<any> = [];
   private onePage: boolean = true;
   private _innerHeight = window.innerHeight;
+  public id: string;
+  private sub: any;
 
   constructor(private _element: ElementRef,
               private _d3Service: D3Service,
-              private gitHubService: GitHubService) {
+              private gitHubService: GitHubService,
+              private route: ActivatedRoute) {
     this._d3 = this._d3Service.getD3();
     this._parentNativeElement = this._element.nativeElement;
   }
 
   ngOnInit() {
-    this.gitHubService.getLineData("diff.c").subscribe((data: any) => {
-      let d3 = this._d3;
-      let d3ParentElement: Selection<HTMLElement, any, any, any>;
-      let d3G: Selection<SVGGElement, any, null, undefined>;
-      let authorLookup: Map<string, number> = new Map<string, number>();
-      let authorLookupArray: Array<any> = [];
-      let sortedDataByMaxAuthor: Array<any> = [];
-      let path: string = data["path"];
-      let authorCount: number = 0;
+    $(".loading").show();
+    this.sub = this.route.params.subscribe(params => {
+      this.id = params['id'];
 
-      window.innerHeight;
+      let fileName: string = this.id ? this.id : "README.md";
 
-      data.lines.forEach(line => {
-        if (!authorLookup.get(line.personid)) {
-          data.lines.forEach(line2 => {
-            if(line.personid === line2.personid) {
-              authorCount++;
-            }
-          });
-          authorLookup.set(line.personid, authorCount);
-          authorLookupArray.push([line.personid, authorCount]);
-          authorCount = 0;
-        }
-      });
+      this.gitHubService.getLineData(fileName).subscribe((data: any) => {
+        let d3 = this._d3;
+        let d3ParentElement: Selection<HTMLElement, any, any, any>;
+        let d3G: Selection<SVGGElement, any, null, undefined>;
+        let authorLookup: Map<string, number> = new Map<string, number>();
+        let authorLookupArray: Array<any> = [];
+        let sortedDataByMaxAuthor: Array<any> = [];
+        let path: string = data["path"];
+        let authorCount: number = 0;
 
-      authorLookupArray.sort((a, b) => { // returns me sorted list of authors according to their LOC in ascending order
-        return b[1] > a[1] ? 1 : -1;
-      }).forEach(a => {
+        window.innerHeight;
+
         data.lines.forEach(line => {
-          if(a[0] === line.personid) {
-            sortedDataByMaxAuthor.push(line); // stack the lines as per sorted authors list, author with more lines comes at top and then the one with 2nd less lines
+          if (!authorLookup.get(line.personid)) {
+            data.lines.forEach(line2 => {
+              if(line.personid === line2.personid) {
+                authorCount++;
+              }
+            });
+            authorLookup.set(line.personid, authorCount);
+            authorLookupArray.push([line.personid, authorCount]);
+            authorCount = 0;
           }
         });
-      });
 
-      this.uniqueAuthors = sortedDataByMaxAuthor.map(auth=> {
-        return auth.personid
-      }).filter((elem, index, self) => {
-        return index == self.indexOf(elem);
-      }).map((auth) => {
-        return {"personid": auth}
-      });
-
-      if (this._parentNativeElement !== null) {
-
-        d3ParentElement = d3.select(this._parentNativeElement);
-
-        this._d3Svg = d3ParentElement.select<SVGSVGElement>('svg');
-
-
-        d3G = this._d3G = this._d3Svg.append<SVGGElement>('g');
-
-        if (this.onePage) {
-          this._d3Svg.attr('width', window.screen.width/2);
-          this._d3Svg.attr('height', window.innerHeight);
-
-          let widthLine: number = window.screen.height/(Number(data["lines"][data["lines"].length-1].finalline));
-
-          let widthSumY1: number = 0;
-          let widthSumY2: number = 0;
-
-          this._d3G.selectAll<SVGLineElement, any>('line')
-            .data(sortedDataByMaxAuthor)
-            .enter()
-            .append<SVGCircleElement>('line')
-            .attr("x1", (d: any) => {
-              return 0;
-            })
-            .attr("y1", (d: any) => {
-              widthSumY1 = widthSumY1 + widthLine;
-              return widthSumY1;
-            })
-            .attr("x2", (d: any) => {
-              //return d.contentlength * 7;
-              return 600;
-            })
-            .attr("y2", (d: any) => {
-              widthSumY2 = widthSumY2 + widthLine;
-              return widthSumY2;
-            })
-            .attr("stroke-width", widthLine)
-            .attr("stroke", (d: any) => {
-              return this.getAuthorColor(d.personid);
-            })
-            .append("title").text((d: any) => {
-            return d.personid;
+        authorLookupArray.sort((a, b) => { // returns me sorted list of authors according to their LOC in ascending order
+          return b[1] > a[1] ? 1 : -1;
+        }).forEach(a => {
+          data.lines.forEach(line => {
+            if(a[0] === line.personid) {
+              sortedDataByMaxAuthor.push(line); // stack the lines as per sorted authors list, author with more lines comes at top and then the one with 2nd less lines
+            }
           });
+        });
 
-        } else {
+        this.uniqueAuthors = sortedDataByMaxAuthor.map(auth=> {
+          return auth.personid
+        }).filter((elem, index, self) => {
+          return index == self.indexOf(elem);
+        }).map((auth) => {
+          return {"personid": auth}
+        });
 
-          let screenHeight: number =  (Number(data["lines-count"]) * 2) + 2;
+        if (this._parentNativeElement !== null) {
 
-          this._d3Svg.attr('width', this.width);
-          this._d3Svg.attr('height', screenHeight);
+          d3ParentElement = d3.select(this._parentNativeElement);
 
-          let lineStrokeWidth: number = screenHeight/data["lines-count"];
+          this._d3Svg = d3ParentElement.select<SVGSVGElement>('svg');
 
-          let widthSumY1: number = 0;
-          let widthSumY2: number = 0;
 
-          this._d3G.selectAll<SVGLineElement, any>('line')
-            .data(sortedDataByMaxAuthor)
-            .enter()
-            .append<SVGCircleElement>('line')
-            .attr("x1", (d: any) => {
-              return 0;
-            })
-            .attr("y1", (d: any) => {
-              widthSumY1 = widthSumY1 + lineStrokeWidth;
-              return widthSumY1;
-            })
-            .attr("x2", (d: any) => {
-              return 600;
-            })
-            .attr("y2", (d: any) => {
-              widthSumY2 = widthSumY2 + lineStrokeWidth;
-              return widthSumY2;
-            })
-            .attr("stroke-width", 1)
-            .attr("stroke", (d: any) => {
-              return this.getAuthorColor(d.personid);
-            })
-            .append("title").text((d: any) => {
-            return d.personid;
-          });
+          d3G = this._d3G = this._d3Svg.append<SVGGElement>('g');
+
+          if (this.onePage) {
+            this._d3Svg.attr('width', window.screen.width/2);
+            this._d3Svg.attr('height', window.innerHeight);
+
+            let widthLine: number = window.innerHeight/(Number(data["lines"][data["lines"].length-1].finalline));
+
+            let widthSumY1: number = 0;
+            let widthSumY2: number = 0;
+
+            this._d3G.selectAll<SVGLineElement, any>('line')
+              .data(sortedDataByMaxAuthor)
+              .enter()
+              .append<SVGCircleElement>('line')
+              .attr("x1", (d: any) => {
+                return 0;
+              })
+              .attr("y1", (d: any) => {
+                widthSumY1 = widthSumY1 + widthLine;
+                return widthSumY1;
+              })
+              .attr("x2", (d: any) => {
+                //return d.contentlength * 7;
+                return 600;
+              })
+              .attr("y2", (d: any) => {
+                widthSumY2 = widthSumY2 + widthLine;
+                return widthSumY2;
+              })
+              .attr("stroke-width", widthLine)
+              .attr("stroke", (d: any) => {
+                return this.getAuthorColor(d.personid);
+              })
+              .append("title").text((d: any) => {
+              return d.personid;
+            });
+            $(".loading").hide();
+          } else {
+
+            let screenHeight: number =  (Number(data["lines-count"]) * 2) + 2;
+
+            this._d3Svg.attr('width', this.width);
+            this._d3Svg.attr('height', screenHeight);
+
+            let lineStrokeWidth: number = screenHeight/data["lines-count"];
+
+            let widthSumY1: number = 0;
+            let widthSumY2: number = 0;
+
+            this._d3G.selectAll<SVGLineElement, any>('line')
+              .data(sortedDataByMaxAuthor)
+              .enter()
+              .append<SVGCircleElement>('line')
+              .attr("x1", (d: any) => {
+                return 0;
+              })
+              .attr("y1", (d: any) => {
+                widthSumY1 = widthSumY1 + lineStrokeWidth;
+                return widthSumY1;
+              })
+              .attr("x2", (d: any) => {
+                return 600;
+              })
+              .attr("y2", (d: any) => {
+                widthSumY2 = widthSumY2 + lineStrokeWidth;
+                return widthSumY2;
+              })
+              .attr("stroke-width", 1)
+              .attr("stroke", (d: any) => {
+                return this.getAuthorColor(d.personid);
+              })
+              .append("title").text((d: any) => {
+              return d.personid;
+            });
+          }
         }
-      }
+      });
     });
-
   }
 
   public getLegend(): Observable<any> {
