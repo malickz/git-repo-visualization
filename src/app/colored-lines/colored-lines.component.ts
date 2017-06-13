@@ -74,14 +74,16 @@ export class ColoredLinesComponent implements OnInit {
             }
           });
         });
+        //
+        // this.uniqueAuthors = sortedDataByMaxAuthor.map(auth=> {
+        //   return auth.personid
+        // }).filter((elem, index, self) => {
+        //   return index == self.indexOf(elem);
+        // }).map((auth) => {
+        //   return {"personid": auth}
+        // });
 
-        this.uniqueAuthors = sortedDataByMaxAuthor.map(auth=> {
-          return auth.personid
-        }).filter((elem, index, self) => {
-          return index == self.indexOf(elem);
-        }).map((auth) => {
-          return {"personid": auth}
-        });
+        this.uniqueAuthors = authorLookupArray;
 
         if (this._parentNativeElement !== null) {
 

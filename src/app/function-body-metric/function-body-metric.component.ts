@@ -2,6 +2,7 @@ import {Component, ElementRef, Input, OnInit} from '@angular/core';
 import { D3Service, D3, Selection } from 'd3-ng2-service';
 import {GitHubService} from "../git-hub.service";
 import {Observable} from "rxjs/Rx";
+import {ActivatedRoute, Router} from "@angular/router";
 @Component({
   selector: 'app-function-body-metric',
   templateUrl: './function-body-metric.component.html',
@@ -17,40 +18,46 @@ export class FunctionBodyMetricComponent implements OnInit {
   private _d3G: Selection<SVGGElement, any, null, undefined>;
   private authorMap: Map<string, string> = new Map<string, string>();
   private uniqueAuthors: Array<any> = [];
-  private _innerHeight = window.innerHeight;
   private funData: Array<any> = [];
+  public id: string;
+  private sub: any;
+  private functionStart: number = 0;
 
   constructor(private _element: ElementRef,
               private _d3Service: D3Service,
-              private gitHubService: GitHubService) {
+              private gitHubService: GitHubService,
+              private route: ActivatedRoute,
+              private router: Router) {
     this._d3 = this._d3Service.getD3();
     this._parentNativeElement = this._element.nativeElement;
   }
 
   ngOnInit() {
-    this.renderChart("diff.c");
+    $(".loading").show();
+    this.sub = this.route.params.subscribe(params => {
+      this.id = params['id'];
+
+      let fileName: string = this.id ? this.id : "README.md";
+      this.renderChart(fileName);
+
+    });
   }
 
   public renderChart(value: string) {
     if (value)
-      this.gitHubService.getFunctionData(value, true).subscribe((dataArr: any) => {
+      this.gitHubService.getFunctionMetric(value).subscribe((dataArr: any) => {
         this.funData = dataArr[0];
         let data = dataArr[1];
+        this.functionStart = Number(this.funData[0][2]);
 
-        let d3 = this._d3;
-        let d3ParentElement: Selection<HTMLElement, any, any, any>;
-        let d3G: Selection<SVGGElement, any, null, undefined>;
-        let authorLookup: Map<string, number> = new Map<string, number>();
-        let path: string = data["path"];
         let authorCount: number = 0;
-        let authorLeaderBoard = [];
-        let sortedDataByMaxFunctions = [];
+        let authorLookup: Map<string, number> = new Map<string, number>();
+        this.uniqueAuthors = [];
 
-        this.funData.forEach(fun => { // find the author of function
-          data.lines.forEach((line, dInd, lines) => {
-            if(parseInt(line.finalline) === parseInt(fun[2])) {
-              fun.push(line.personid);
-              lines.splice(dInd+1, 0, {// adds extra object in data.lines for clustering black line.
+        this.funData.forEach((f, fInd)=> { // adds extra object in data.lines for clustering black line.
+          data.lines.forEach((d, dInd, lines)=> {
+            if (d.finalline == f[5]) {
+              lines.splice(dInd+1, 0, {
                 "break" : true
               });
             }
@@ -59,43 +66,24 @@ export class FunctionBodyMetricComponent implements OnInit {
 
 
         this.funData.forEach(line => { // get the count of function per author
-          if (!authorLookup.get(line[line.length-1])) {
+          if (!authorLookup.get(line[line.length-1][0])) {
             this.funData.forEach(line2 => {
-              if(line[line.length-1] === line2[line2.length-1]) {
+              if(line[line.length-1][0] === line2[line2.length-1][0]) {
                 authorCount++;
               }
             });
-            authorLookup.set(line[line.length-1], authorCount);
-            authorLeaderBoard.push([line[line.length-1], authorCount, line]);
+            authorLookup.set(line[line.length-1][0], authorCount);
+            this.uniqueAuthors.push([line[line.length-1][0], authorCount, line]);
+            this.getAuthorColor(line[line.length-1][0]);
             authorCount = 0;
           }
         });
 
-        authorLeaderBoard.sort((a, b) => { // returns me sorted list of authors according to their function count in ascending order
-          return b[1] > a[1] ? 1 : -1;
-        }).forEach(author => {
-          data.lines.forEach(line => {
-            if(author[0] === line.personid) {
-              line["functionName"] = author[2][4];
-              sortedDataByMaxFunctions.push(line); // stack the lines as per sorted authors list, author with more function comes at top and then the one with 2nd less lines
-            }
-          });
-        });
 
-
-        data.lines.forEach(line => {
-          if (!authorLookup.get(line.personid)) {
-            sortedDataByMaxFunctions.push(line);
-          }
-        });
-
-        this.uniqueAuthors = sortedDataByMaxFunctions.map(auth=> {
-          return auth.personid
-        }).filter((elem, index, self) => {
-          return index == self.indexOf(elem);
-        }).map((auth) => {
-          return {"personid": auth}
-        });
+        let d3 = this._d3;
+        let d3ParentElement: Selection<HTMLElement, any, any, any>;
+        let d3G: Selection<SVGGElement, any, null, undefined>;
+        let path: string = data["path"];
 
         if (this._parentNativeElement !== null) {
 
@@ -156,7 +144,11 @@ export class FunctionBodyMetricComponent implements OnInit {
             })
             .attr("stroke", (d: any) => {
               if (!d.hasOwnProperty("break")) {
-                return this.getAuthorColor(d.personid);
+                if (d.finalline < this.functionStart) {
+                  return this.getAuthorColor("others");
+                } else {
+                  return this.getAuthorColor(d.personid);
+                }
               } else {
                 return "black";
               }
@@ -164,11 +156,38 @@ export class FunctionBodyMetricComponent implements OnInit {
             .append("title")
             .text((d: any) => {
               if (!d.hasOwnProperty("break")) {
-                return d.personid;
+                let functionCheck = this.isLinePartOfFunction(d);
+                if (functionCheck[0]) {
+                  return d.personid + " --- " + functionCheck[1][4];
+                } else {
+                  return "others";
+                }
               }
             });
         }
+        $(".loading").hide();
+      }, (err) => {
+        if (err.status == 500) {
+          $(".loading").hide();
+          $(".error-message").show();
+        }
       });
+  }
+
+  public redirect() {
+    this.router.navigate(["./main"]);
+  }
+
+  private isLinePartOfFunction(d: any): Array<any> {
+    let flag: Array<any> = [];
+    flag[0] = false;
+    this.funData.forEach(fd => {
+      if (d.finalline >= Number(fd[2]) && d.finalline <= Number(fd[5])) {
+        flag[0] = true;
+        flag[1] = fd;
+      }
+    });
+    return flag;
   }
 
   public getAuthorColor(author: string) {
@@ -230,7 +249,6 @@ export class FunctionBodyMetricComponent implements OnInit {
 
 export const colors: Array<string> = [
   "017, 097, 044",
-  "000, 000, 000",
   "208, 068, 052",
   "316, 056, 025",
   "104, 044, 045",

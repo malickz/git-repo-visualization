@@ -13,6 +13,7 @@
   flex: 0 1 auto;
 }
 .left-side {
+  min-height: 600px;
   flex: 0 1 50%;
   background-color: #f1f1f1;
 }

@@ -7,16 +7,20 @@
     <svg class="lines"></svg>
   </div>
   <div class="legend-container" [ngStyle]="{'height':_innerHeight+'px'}">
+    <div class="error-message">
+      <a (click)="redirect()" href="./main">BACK to Main</a>
+    </div>
     <div class="legend">
       <div class="input-field" style="display: none">
         <input #path >
         <button (click)="renderChart(path.value)">Submit</button>
       </div>
-      <h3>Legend:</h3>
+      <h3>Summary: Function Dominance WRT most number of functions</h3>
+      <div class="legend-title"><span>AuthorName: </span><span>No. of Functions</span></div>
       <ul>
         <li [style.color]="getAuthorColor(d.personid)"
             *ngFor="let d of getLegend() | async">
-          {{ d.personid }}
+          {{ d.personid }} : {{d.count}}
         </li>
       </ul>
     </div>

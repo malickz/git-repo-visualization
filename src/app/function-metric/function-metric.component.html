@@ -7,16 +7,21 @@
     <svg class="lines"></svg>
   </div>
   <div class="legend-container">
+    <div class="error-message">
+      <a (click)="redirect()" href="./main">BACK to Main</a>
+    </div>
     <div class="legend">
       <div class="input-field" style="display: none">
         <input #path >
         <button (click)="renderChart(path.value)">Submit</button>
       </div>
-      <h3>Summary: Person Id *** No. of functions</h3>
+      <h3>Summary: Function Dominance WRT most number of lines in a function, both signature and body has
+        dominant author color</h3>
+      <div class="legend-title"><span>AuthorName: </span><span>No. of Functions</span></div>
       <ul>
         <li [style.color]="getAuthorColor(d[0])"
             *ngFor="let d of getLegend() | async">
-          {{ d[0] }} *** {{ d[1] }}
+          {{ d[0] }} : {{ d[1] }}
         </li>
       </ul>
     </div>

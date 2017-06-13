@@ -104,7 +104,14 @@ export class FunctionDominantComponent implements OnInit {
         }).filter((elem, index, self) => {
           return index == self.indexOf(elem);
         }).map((auth) => {
-          return {"personid": auth}
+          let obj: any ={};
+          if (authorLookup.get(auth)) {
+            obj["count"] = authorLookup.get(auth);
+          } else {
+            obj["count"] = 0;
+          }
+          obj["personid"] = auth;
+          return obj;
         });
 
         if (this._parentNativeElement !== null) {
@@ -159,7 +166,7 @@ export class FunctionDominantComponent implements OnInit {
           $(".loading").hide();
           $(".error-message").show();
         }
-    });
+      });
   }
   public redirect() {
     this.router.navigate(["./main"]);

@@ -9,6 +9,12 @@
   flex: 1 1 30%;
   overflow: auto;
 }
+ul {
+  padding-left: 0px;
+}
+.legend-title {
+  font-weight: bold;
+}
 .lines {
   padding-left: 0px;
 }

@@ -2905,6 +2905,9 @@ var VisualSelectionComponent = (function () {
                 case graphType.functionLineCount:
                     this.router.navigate(['./functionDominance', this.fileName]);
                     break;
+                case graphType.functionLineCountDifferentColorBody:
+                    this.router.navigate(['./functionDominanceBody', this.fileName]);
+                    break;
             }
     };
     return VisualSelectionComponent;
@@ -2927,6 +2930,7 @@ var graphType;
     graphType[graphType["line"] = "line"] = "line";
     graphType[graphType["functionDominance"] = "functionDominance"] = "functionDominance";
     graphType[graphType["functionLineCount"] = "functionLineCount"] = "functionLineCount";
+    graphType[graphType["functionLineCountDifferentColorBody"] = "functionLineCountDifferentColorBody"] = "functionLineCountDifferentColorBody";
 })(graphType || (graphType = {}));
 var _a;
 //# sourceMappingURL=visual-selection.component.js.map
@@ -2954,7 +2958,7 @@ module.exports = module.exports.toString();
 /***/ 1048:
 /***/ (function(module, exports) {
 
-module.exports = "<div>\n  <div>Current Selected File: <b>{{fileName}}</b></div>\n  <br>\n  <div>Select type of visualization from below:</div>\n  <ul>\n    <li (click)=\"redirect('line')\">Line Graph WRT to most number of line of code in file</li>\n    <li (click)=\"redirect('functionDominance')\">Function Dominance WRT to most number of functions</li>\n    <li (click)=\"redirect('functionLineCount')\">Line Graph - WRT most number of lines in a function</li>\n  </ul>\n</div>\n\n\n\n"
+module.exports = "<div>\n  <div>Current Selected File: <b>{{fileName}}</b></div>\n  <br>\n  <div>Select type of visualization from below:</div>\n  <ul>\n    <li (click)=\"redirect('line')\">Line Graph WRT most number of line of code in file</li>\n    <li (click)=\"redirect('functionDominance')\">Function Dominance WRT most number of functions</li>\n    <li (click)=\"redirect('functionLineCount')\">Line Graph - WRT most number of lines in a function - Same colored signature and body</li>\n    <li (click)=\"redirect('functionLineCountDifferentColorBody')\">Line Graph - WRT most number of lines in a function - Different colored signature and body</li>\n  </ul>\n</div>\n\n\n\n"
 
 /***/ }),
 
@@ -5155,6 +5159,10 @@ var ROUTES = [
         component: __WEBPACK_IMPORTED_MODULE_23__function_body_metric_function_body_metric_component__["a" /* FunctionBodyMetricComponent */]
     },
     {
+        path: 'functionDominanceBody/:id',
+        component: __WEBPACK_IMPORTED_MODULE_23__function_body_metric_function_body_metric_component__["a" /* FunctionBodyMetricComponent */]
+    },
+    {
         path: 'main',
         component: __WEBPACK_IMPORTED_MODULE_24__files_tree_files_tree_component__["a" /* FilesTreeComponent */]
     }
@@ -5284,13 +5292,15 @@ var ColoredLinesComponent = (function () {
                         }
                     });
                 });
-                _this.uniqueAuthors = sortedDataByMaxAuthor.map(function (auth) {
-                    return auth.personid;
-                }).filter(function (elem, index, self) {
-                    return index == self.indexOf(elem);
-                }).map(function (auth) {
-                    return { "personid": auth };
-                });
+                //
+                // this.uniqueAuthors = sortedDataByMaxAuthor.map(auth=> {
+                //   return auth.personid
+                // }).filter((elem, index, self) => {
+                //   return index == self.indexOf(elem);
+                // }).map((auth) => {
+                //   return {"personid": auth}
+                // });
+                _this.uniqueAuthors = authorLookupArray;
                 if (_this._parentNativeElement !== null) {
                     d3ParentElement = d3.select(_this._parentNativeElement);
                     _this._d3Svg = d3ParentElement.select('svg');
@@ -5879,6 +5889,7 @@ var _a, _b, _c;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__git_hub_service__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_Rx__ = __webpack_require__(60);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_Rx___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_rxjs_Rx__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__angular_router__ = __webpack_require__(124);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return FunctionBodyMetricComponent; });
 /* unused harmony export colors */
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -5894,41 +5905,45 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
+
 var FunctionBodyMetricComponent = (function () {
-    function FunctionBodyMetricComponent(_element, _d3Service, gitHubService) {
+    function FunctionBodyMetricComponent(_element, _d3Service, gitHubService, route, router) {
         this._element = _element;
         this._d3Service = _d3Service;
         this.gitHubService = gitHubService;
+        this.route = route;
+        this.router = router;
         this.width = 700;
         this.height = 800;
         this.authorMap = new Map();
         this.uniqueAuthors = [];
-        this._innerHeight = window.innerHeight;
         this.funData = [];
+        this.functionStart = 0;
         this._d3 = this._d3Service.getD3();
         this._parentNativeElement = this._element.nativeElement;
     }
     FunctionBodyMetricComponent.prototype.ngOnInit = function () {
-        this.renderChart("diff.c");
+        var _this = this;
+        $(".loading").show();
+        this.sub = this.route.params.subscribe(function (params) {
+            _this.id = params['id'];
+            var fileName = _this.id ? _this.id : "README.md";
+            _this.renderChart(fileName);
+        });
     };
     FunctionBodyMetricComponent.prototype.renderChart = function (value) {
         var _this = this;
         if (value)
-            this.gitHubService.getFunctionData(value, true).subscribe(function (dataArr) {
+            this.gitHubService.getFunctionMetric(value).subscribe(function (dataArr) {
                 _this.funData = dataArr[0];
                 var data = dataArr[1];
-                var d3 = _this._d3;
-                var d3ParentElement;
-                var d3G;
-                var authorLookup = new Map();
-                var path = data["path"];
+                _this.functionStart = Number(_this.funData[0][2]);
                 var authorCount = 0;
-                var authorLeaderBoard = [];
-                var sortedDataByMaxFunctions = [];
-                _this.funData.forEach(function (fun) {
-                    data.lines.forEach(function (line, dInd, lines) {
-                        if (parseInt(line.finalline) === parseInt(fun[2])) {
-                            fun.push(line.personid);
+                var authorLookup = new Map();
+                _this.uniqueAuthors = [];
+                _this.funData.forEach(function (f, fInd) {
+                    data.lines.forEach(function (d, dInd, lines) {
+                        if (d.finalline == f[5]) {
                             lines.splice(dInd + 1, 0, {
                                 "break": true
                             });
@@ -5936,39 +5951,22 @@ var FunctionBodyMetricComponent = (function () {
                     });
                 });
                 _this.funData.forEach(function (line) {
-                    if (!authorLookup.get(line[line.length - 1])) {
+                    if (!authorLookup.get(line[line.length - 1][0])) {
                         _this.funData.forEach(function (line2) {
-                            if (line[line.length - 1] === line2[line2.length - 1]) {
+                            if (line[line.length - 1][0] === line2[line2.length - 1][0]) {
                                 authorCount++;
                             }
                         });
-                        authorLookup.set(line[line.length - 1], authorCount);
-                        authorLeaderBoard.push([line[line.length - 1], authorCount, line]);
+                        authorLookup.set(line[line.length - 1][0], authorCount);
+                        _this.uniqueAuthors.push([line[line.length - 1][0], authorCount, line]);
+                        _this.getAuthorColor(line[line.length - 1][0]);
                         authorCount = 0;
                     }
                 });
-                authorLeaderBoard.sort(function (a, b) {
-                    return b[1] > a[1] ? 1 : -1;
-                }).forEach(function (author) {
-                    data.lines.forEach(function (line) {
-                        if (author[0] === line.personid) {
-                            line["functionName"] = author[2][4];
-                            sortedDataByMaxFunctions.push(line); // stack the lines as per sorted authors list, author with more function comes at top and then the one with 2nd less lines
-                        }
-                    });
-                });
-                data.lines.forEach(function (line) {
-                    if (!authorLookup.get(line.personid)) {
-                        sortedDataByMaxFunctions.push(line);
-                    }
-                });
-                _this.uniqueAuthors = sortedDataByMaxFunctions.map(function (auth) {
-                    return auth.personid;
-                }).filter(function (elem, index, self) {
-                    return index == self.indexOf(elem);
-                }).map(function (auth) {
-                    return { "personid": auth };
-                });
+                var d3 = _this._d3;
+                var d3ParentElement;
+                var d3G;
+                var path = data["path"];
                 if (_this._parentNativeElement !== null) {
                     d3ParentElement = d3.select(_this._parentNativeElement);
                     _this._d3Svg = d3ParentElement.select('svg');
@@ -6023,7 +6021,12 @@ var FunctionBodyMetricComponent = (function () {
                     })
                         .attr("stroke", function (d) {
                         if (!d.hasOwnProperty("break")) {
-                            return _this.getAuthorColor(d.personid);
+                            if (d.finalline < _this.functionStart) {
+                                return _this.getAuthorColor("others");
+                            }
+                            else {
+                                return _this.getAuthorColor(d.personid);
+                            }
                         }
                         else {
                             return "black";
@@ -6032,11 +6035,37 @@ var FunctionBodyMetricComponent = (function () {
                         .append("title")
                         .text(function (d) {
                         if (!d.hasOwnProperty("break")) {
-                            return d.personid;
+                            var functionCheck = _this.isLinePartOfFunction(d);
+                            if (functionCheck[0]) {
+                                return d.personid + " --- " + functionCheck[1][4];
+                            }
+                            else {
+                                return "others";
+                            }
                         }
                     });
                 }
+                $(".loading").hide();
+            }, function (err) {
+                if (err.status == 500) {
+                    $(".loading").hide();
+                    $(".error-message").show();
+                }
             });
+    };
+    FunctionBodyMetricComponent.prototype.redirect = function () {
+        this.router.navigate(["./main"]);
+    };
+    FunctionBodyMetricComponent.prototype.isLinePartOfFunction = function (d) {
+        var flag = [];
+        flag[0] = false;
+        this.funData.forEach(function (fd) {
+            if (d.finalline >= Number(fd[2]) && d.finalline <= Number(fd[5])) {
+                flag[0] = true;
+                flag[1] = fd;
+            }
+        });
+        return flag;
     };
     FunctionBodyMetricComponent.prototype.getAuthorColor = function (author) {
         if (author == "others") {
@@ -6114,12 +6143,11 @@ FunctionBodyMetricComponent = __decorate([
         template: __webpack_require__(753),
         styles: [__webpack_require__(734)]
     }),
-    __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_0__angular_core__["M" /* ElementRef */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_0__angular_core__["M" /* ElementRef */]) === "function" && _a || Object, typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_1_d3_ng2_service__["a" /* D3Service */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_d3_ng2_service__["a" /* D3Service */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_2__git_hub_service__["a" /* GitHubService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__git_hub_service__["a" /* GitHubService */]) === "function" && _c || Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_0__angular_core__["M" /* ElementRef */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_0__angular_core__["M" /* ElementRef */]) === "function" && _a || Object, typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_1_d3_ng2_service__["a" /* D3Service */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_d3_ng2_service__["a" /* D3Service */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_2__git_hub_service__["a" /* GitHubService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__git_hub_service__["a" /* GitHubService */]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_4__angular_router__["c" /* ActivatedRoute */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_4__angular_router__["c" /* ActivatedRoute */]) === "function" && _d || Object, typeof (_e = typeof __WEBPACK_IMPORTED_MODULE_4__angular_router__["b" /* Router */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_4__angular_router__["b" /* Router */]) === "function" && _e || Object])
 ], FunctionBodyMetricComponent);
 
 var colors = [
     "017, 097, 044",
-    "000, 000, 000",
     "208, 068, 052",
     "316, 056, 025",
     "104, 044, 045",
@@ -6186,7 +6214,7 @@ var colors = [
     "251, 051, 036",
     "082, 022, 032)"
 ];
-var _a, _b, _c;
+var _a, _b, _c, _d, _e;
 //# sourceMappingURL=function-body-metric.component.js.map
 
 /***/ }),
@@ -6294,7 +6322,15 @@ var FunctionDominantComponent = (function () {
                 }).filter(function (elem, index, self) {
                     return index == self.indexOf(elem);
                 }).map(function (auth) {
-                    return { "personid": auth };
+                    var obj = {};
+                    if (authorLookup.get(auth)) {
+                        obj["count"] = authorLookup.get(auth);
+                    }
+                    else {
+                        obj["count"] = 0;
+                    }
+                    obj["personid"] = auth;
+                    return obj;
                 });
                 if (_this._parentNativeElement !== null) {
                     d3ParentElement = d3.select(_this._parentNativeElement);
@@ -7721,7 +7757,7 @@ exports = module.exports = __webpack_require__(12)();
 
 
 // module
-exports.push([module.i, ".container-graph {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 auto;\n          flex: 1 1 auto;\n}\n.lines-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 70%;\n          flex: 1 1 70%;\n}\n.legend-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 30%;\n          flex: 1 1 30%;\n  overflow: auto;\n}\n.lines {\n  padding-left: 0px;\n}\n.legend {\n  padding-left: 0px;\n}\n.legend ul{\n  margin: 0px;\n  list-style: none;\n}\n.legend ul li:before {\n  content: \"\\2022\";\n  font-size: 170%;\n}\n", ""]);
+exports.push([module.i, ".container-graph {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 auto;\n          flex: 1 1 auto;\n}\n.lines-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 70%;\n          flex: 1 1 70%;\n}\n.legend-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 30%;\n          flex: 1 1 30%;\n  overflow: auto;\n}\n.legend-title {\n  font-weight: bold;\n}\nul {\n  padding-left: 0px;\n}\n.lines {\n  padding-left: 0px;\n}\n.legend {\n  padding-left: 0px;\n}\n.legend ul{\n  margin: 0px;\n  list-style: none;\n}\n.legend ul li:before {\n  content: \"\\2022\";\n  font-size: 170%;\n}\n", ""]);
 
 // exports
 
@@ -7811,7 +7847,7 @@ exports = module.exports = __webpack_require__(12)();
 
 
 // module
-exports.push([module.i, ".file-tree-container {\n  height: 700px;\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-flex: 0;\n      -ms-flex: 0 1 auto;\n          flex: 0 1 auto;\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: column;\n          flex-direction: column;\n}\n.top-panel {\n\n}\n\n.bottom-panel {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-flex: 0;\n      -ms-flex: 0 1 auto;\n          flex: 0 1 auto;\n}\n.left-side {\n  -webkit-box-flex: 0;\n      -ms-flex: 0 1 50%;\n          flex: 0 1 50%;\n  background-color: #f1f1f1;\n}\n.right-side {\n  -webkit-box-flex: 0;\n      -ms-flex: 0 1 50%;\n          flex: 0 1 50%;\n  background-color: #e6e6e6;\n}\n\ndiv.tree div.tree-children::before,\ndiv.tree::before {\n  content: \"\";\n  position: absolute;\n  border-left: 1px dotted #23527c;\n  height: 100%;\n  top: -14px;\n  left: 12px\n}\n\ndiv.tree {\n  padding-left: 0;\n  margin-left: -5px\n}\n\ndiv.tree div.tree-children {\n  position: relative;\n  padding-left: 0;\n  margin-left: 16px\n}\n\ndiv.tree div.tree-children::before {\n  left: 5px\n}\n\ndiv.tree treenode>div>.node-wrapper {\n  margin-left: 24px\n}\n\ndiv.tree treenode>div>.node-wrapper>.node-content-wrapper {\n  margin-left: 4px\n}\n\ndiv.tree treenode>div.tree-node-leaf>.node-wrapper {\n  margin-left: 0\n}\n\ndiv.tree treenode>div::before {\n  content: \"\";\n  position: absolute;\n  border-bottom: 1px dotted #23527c;\n  width: 7px;\n  margin-top: 12px;\n  left: 7px\n}\n\ndiv.tree treenode>div .toggle-children-wrapper {\n  width: 13px;\n  height: 13px;\n  border: 1px solid #23527c;\n  position: absolute;\n  left: 15px;\n  margin-top: 5px;\n  margin-left: 0;\n  display: inline-block;\n  background-color: #fff;\n  z-index: 1\n}\n\ndiv.tree treenode>div .toggle-children-wrapper::before {\n  content: \"\";\n  display: inline-block;\n  width: 7px;\n  border-top: 1px solid #23527c;\n  position: absolute;\n  top: 5px;\n  left: 2px\n}\n\ndiv.tree treenode>div .toggle-children-wrapper.toggle-children-wrapper-collapsed::after {\n  content: \"\";\n  display: inline-block;\n  height: 7px;\n  border-left: 1px solid #23527c;\n  position: absolute;\n  top: 2px;\n  left: 5px\n}\n\ndiv.tree treenode>div .toggle-children-wrapper .toggle-children {\n  display: none\n}\n\ndiv.tree treenode>div .node-content-wrapper {\n  margin-left: 4px\n}\n\ndiv.tree>treenode>div::before {\n  left: 14px\n}\n\ndiv.tree>treenode>div>.node-wrapper>treenodeexpander>.toggle-children-wrapper {\n  left: 22px\n}\n", ""]);
+exports.push([module.i, ".file-tree-container {\n  height: 700px;\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-flex: 0;\n      -ms-flex: 0 1 auto;\n          flex: 0 1 auto;\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: column;\n          flex-direction: column;\n}\n.top-panel {\n\n}\n\n.bottom-panel {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-flex: 0;\n      -ms-flex: 0 1 auto;\n          flex: 0 1 auto;\n}\n.left-side {\n  min-height: 600px;\n  -webkit-box-flex: 0;\n      -ms-flex: 0 1 50%;\n          flex: 0 1 50%;\n  background-color: #f1f1f1;\n}\n.right-side {\n  -webkit-box-flex: 0;\n      -ms-flex: 0 1 50%;\n          flex: 0 1 50%;\n  background-color: #e6e6e6;\n}\n\ndiv.tree div.tree-children::before,\ndiv.tree::before {\n  content: \"\";\n  position: absolute;\n  border-left: 1px dotted #23527c;\n  height: 100%;\n  top: -14px;\n  left: 12px\n}\n\ndiv.tree {\n  padding-left: 0;\n  margin-left: -5px\n}\n\ndiv.tree div.tree-children {\n  position: relative;\n  padding-left: 0;\n  margin-left: 16px\n}\n\ndiv.tree div.tree-children::before {\n  left: 5px\n}\n\ndiv.tree treenode>div>.node-wrapper {\n  margin-left: 24px\n}\n\ndiv.tree treenode>div>.node-wrapper>.node-content-wrapper {\n  margin-left: 4px\n}\n\ndiv.tree treenode>div.tree-node-leaf>.node-wrapper {\n  margin-left: 0\n}\n\ndiv.tree treenode>div::before {\n  content: \"\";\n  position: absolute;\n  border-bottom: 1px dotted #23527c;\n  width: 7px;\n  margin-top: 12px;\n  left: 7px\n}\n\ndiv.tree treenode>div .toggle-children-wrapper {\n  width: 13px;\n  height: 13px;\n  border: 1px solid #23527c;\n  position: absolute;\n  left: 15px;\n  margin-top: 5px;\n  margin-left: 0;\n  display: inline-block;\n  background-color: #fff;\n  z-index: 1\n}\n\ndiv.tree treenode>div .toggle-children-wrapper::before {\n  content: \"\";\n  display: inline-block;\n  width: 7px;\n  border-top: 1px solid #23527c;\n  position: absolute;\n  top: 5px;\n  left: 2px\n}\n\ndiv.tree treenode>div .toggle-children-wrapper.toggle-children-wrapper-collapsed::after {\n  content: \"\";\n  display: inline-block;\n  height: 7px;\n  border-left: 1px solid #23527c;\n  position: absolute;\n  top: 2px;\n  left: 5px\n}\n\ndiv.tree treenode>div .toggle-children-wrapper .toggle-children {\n  display: none\n}\n\ndiv.tree treenode>div .node-content-wrapper {\n  margin-left: 4px\n}\n\ndiv.tree>treenode>div::before {\n  left: 14px\n}\n\ndiv.tree>treenode>div>.node-wrapper>treenodeexpander>.toggle-children-wrapper {\n  left: 22px\n}\n", ""]);
 
 // exports
 
@@ -7829,7 +7865,7 @@ exports = module.exports = __webpack_require__(12)();
 
 
 // module
-exports.push([module.i, ".container-graph {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 auto;\n          flex: 1 1 auto;\n}\n.lines-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 70%;\n          flex: 1 1 70%;\n}\n.legend-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 30%;\n          flex: 1 1 30%;\n  overflow: auto;\n}\n.lines {\n  padding-left: 0px;\n}\n.legend {\n  padding-left: 0px;\n}\n.legend ul{\n  margin: 0px;\n  list-style: none;\n}\n.legend ul li:before {\n  content: \"\\2022\";\n  font-size: 170%;\n}\n", ""]);
+exports.push([module.i, ".container-graph {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 auto;\n          flex: 1 1 auto;\n}\n.lines-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 70%;\n          flex: 1 1 70%;\n}\n.legend-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 30%;\n          flex: 1 1 30%;\n}\n.lines {\n  padding-left: 0px;\n}\nul {\n  padding-left: 0px;\n}\n.legend-title {\n  font-weight: bold;\n}\n.legend {\n  padding-left: 0px;\n}\n.legend ul{\n  margin: 0px;\n  list-style: none;\n}\n.legend ul li:before {\n  content: \"\\2022\";\n  font-size: 170%;\n}\n", ""]);
 
 // exports
 
@@ -7847,7 +7883,7 @@ exports = module.exports = __webpack_require__(12)();
 
 
 // module
-exports.push([module.i, ".container-graph {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 auto;\n          flex: 1 1 auto;\n}\n.lines-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 70%;\n          flex: 1 1 70%;\n}\n.legend-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 30%;\n          flex: 1 1 30%;\n  overflow: auto;\n}\n.lines {\n  padding-left: 0px;\n}\n.legend {\n  padding-left: 0px;\n}\n.legend ul{\n  margin: 0px;\n  list-style: none;\n}\n.legend ul li:before {\n  content: \"\\2022\";\n  font-size: 170%;\n}\n", ""]);
+exports.push([module.i, ".container-graph {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 auto;\n          flex: 1 1 auto;\n}\n.lines-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 70%;\n          flex: 1 1 70%;\n}\n.legend-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 30%;\n          flex: 1 1 30%;\n  overflow: auto;\n}\nul {\n  padding-left: 0px;\n}\n.legend-title {\n  font-weight: bold;\n}\n.lines {\n  padding-left: 0px;\n}\n.legend {\n  padding-left: 0px;\n}\n.legend ul{\n  margin: 0px;\n  list-style: none;\n}\n.legend ul li:before {\n  content: \"\\2022\";\n  font-size: 170%;\n}\n", ""]);
 
 // exports
 
@@ -7865,7 +7901,7 @@ exports = module.exports = __webpack_require__(12)();
 
 
 // module
-exports.push([module.i, ".container-graph {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 auto;\n          flex: 1 1 auto;\n}\n.lines-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 70%;\n          flex: 1 1 70%;\n}\n.legend-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 30%;\n          flex: 1 1 30%;\n}\n.lines {\n  padding-left: 0px;\n}\n.legend {\n  padding-left: 0px;\n}\n.legend ul{\n  margin: 0px;\n  list-style: none;\n}\n.legend ul li:before {\n  content: \"\\2022\";\n  font-size: 170%;\n}\n", ""]);
+exports.push([module.i, ".container-graph {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 auto;\n          flex: 1 1 auto;\n}\n.lines-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 70%;\n          flex: 1 1 70%;\n}\n.legend-container {\n  -webkit-box-flex: 1;\n      -ms-flex: 1 1 30%;\n          flex: 1 1 30%;\n}\n.lines {\n  padding-left: 0px;\n}\nul {\n  padding-left: 0px;\n}\n.legend-title {\n  font-weight: bold;\n}\n.legend {\n  padding-left: 0px;\n}\n.legend ul{\n  margin: 0px;\n  list-style: none;\n}\n.legend ul li:before {\n  content: \"\\2022\";\n  font-size: 170%;\n}\n", ""]);
 
 // exports
 
@@ -7957,7 +7993,7 @@ module.exports = "<router-outlet></router-outlet>\n"
 /***/ 747:
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"container-graph\">\n  <div class=\"lines-container\">\n    <svg class=\"lines\"></svg>\n  </div>\n  <div class=\"legend-container\" [ngStyle]=\"{'height':_innerHeight+'px'}\">\n    <div class=\"legend\">\n      <h3>Legend:</h3>\n      <ul>\n        <li [style.color]=\"getAuthorColor(d.personid)\"\n            *ngFor=\"let d of getLegend() | async\">\n          {{ d.personid }}\n        </li>\n      </ul>\n    </div>\n  </div>\n</div>\n<router-outlet></router-outlet>\n"
+module.exports = "<div class=\"container-graph\">\n  <div class=\"lines-container\">\n    <svg class=\"lines\"></svg>\n  </div>\n  <div class=\"legend-container\" [ngStyle]=\"{'height':_innerHeight+'px'}\">\n    <div class=\"error-message\">\n      <a (click)=\"redirect()\" href=\"./main\">BACK to Main</a>\n    </div>\n    <div class=\"legend\">\n      <h3>Summary: Line Graph WRT most number of line of code in file</h3>\n      <div class=\"legend-title\"><span>AuthorName: </span><span>Line of Code</span></div>\n      <ul>\n        <li [style.color]=\"getAuthorColor(d[0])\"\n            *ngFor=\"let d of getLegend() | async\">\n          {{ d[0] }} : {{ d[1] }}\n        </li>\n      </ul>\n    </div>\n  </div>\n</div>\n<router-outlet></router-outlet>\n"
 
 /***/ }),
 
@@ -7999,21 +8035,21 @@ module.exports = "<div class=\"file-tree-container\">\n  <div class=\"top-panel\
 /***/ 753:
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"container-graph\">\n  <div class=\"lines-container\">\n    <svg class=\"lines\"></svg>\n  </div>\n  <div class=\"legend-container\" [ngStyle]=\"{'height':_innerHeight+'px'}\">\n    <div class=\"legend\">\n      <input #path >\n      <button (click)=\"renderChart(path.value)\">Submit</button>\n      <h3>Legend:</h3>\n      <ul>\n        <li [style.color]=\"getAuthorColor(d.personid)\"\n            *ngFor=\"let d of getLegend() | async\">\n          {{ d.personid }}\n        </li>\n      </ul>\n    </div>\n  </div>\n</div>\n"
+module.exports = "<div class=\"container-graph\">\n  <div class=\"error-message\" style=\"display: none;\"><h1>No functions data to display for this file.\n    <a (click)=\"redirect()\" href=\"./main\">GO BACK</a>\n  </h1>\n  </div>\n  <div class=\"lines-container\">\n    <svg class=\"lines\"></svg>\n  </div>\n  <div class=\"legend-container\">\n    <div class=\"error-message\">\n      <a (click)=\"redirect()\" href=\"./main\">BACK to Main</a>\n    </div>\n    <div class=\"legend\">\n      <div class=\"input-field\" style=\"display: none\">\n        <input #path >\n        <button (click)=\"renderChart(path.value)\">Submit</button>\n      </div>\n      <h3>Summary: function clustering, author of function(signature) across the file is in same color,\n        body color is different for each author. </h3>\n      <div class=\"legend-title\"><span>AuthorName: </span><span>No. of Functions</span></div>\n      <ul>\n        <li [style.color]=\"getAuthorColor(d[0])\"\n            *ngFor=\"let d of getLegend() | async\">\n          {{ d[0] }} : {{ d[1] }}\n        </li>\n      </ul>\n    </div>\n  </div>\n</div>\n"
 
 /***/ }),
 
 /***/ 754:
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"container-graph\">\n  <div class=\"error-message\" style=\"display: none;\"><h1>No functions data to display for this file.\n    <a (click)=\"redirect()\" href=\"./main\">GO BACK</a>\n  </h1>\n  </div>\n  <div class=\"lines-container\">\n    <svg class=\"lines\"></svg>\n  </div>\n  <div class=\"legend-container\" [ngStyle]=\"{'height':_innerHeight+'px'}\">\n    <div class=\"legend\">\n      <div class=\"input-field\" style=\"display: none\">\n        <input #path >\n        <button (click)=\"renderChart(path.value)\">Submit</button>\n      </div>\n      <h3>Legend:</h3>\n      <ul>\n        <li [style.color]=\"getAuthorColor(d.personid)\"\n            *ngFor=\"let d of getLegend() | async\">\n          {{ d.personid }}\n        </li>\n      </ul>\n    </div>\n  </div>\n</div>\n"
+module.exports = "<div class=\"container-graph\">\n  <div class=\"error-message\" style=\"display: none;\"><h1>No functions data to display for this file.\n    <a (click)=\"redirect()\" href=\"./main\">GO BACK</a>\n  </h1>\n  </div>\n  <div class=\"lines-container\">\n    <svg class=\"lines\"></svg>\n  </div>\n  <div class=\"legend-container\" [ngStyle]=\"{'height':_innerHeight+'px'}\">\n    <div class=\"error-message\">\n      <a (click)=\"redirect()\" href=\"./main\">BACK to Main</a>\n    </div>\n    <div class=\"legend\">\n      <div class=\"input-field\" style=\"display: none\">\n        <input #path >\n        <button (click)=\"renderChart(path.value)\">Submit</button>\n      </div>\n      <h3>Summary: Function Dominance WRT most number of functions</h3>\n      <div class=\"legend-title\"><span>AuthorName: </span><span>No. of Functions</span></div>\n      <ul>\n        <li [style.color]=\"getAuthorColor(d.personid)\"\n            *ngFor=\"let d of getLegend() | async\">\n          {{ d.personid }} : {{d.count}}\n        </li>\n      </ul>\n    </div>\n  </div>\n</div>\n"
 
 /***/ }),
 
 /***/ 755:
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"container-graph\">\n  <div class=\"error-message\" style=\"display: none;\"><h1>No functions data to display for this file.\n    <a (click)=\"redirect()\" href=\"./main\">GO BACK</a>\n  </h1>\n  </div>\n  <div class=\"lines-container\">\n    <svg class=\"lines\"></svg>\n  </div>\n  <div class=\"legend-container\">\n    <div class=\"legend\">\n      <div class=\"input-field\" style=\"display: none\">\n        <input #path >\n        <button (click)=\"renderChart(path.value)\">Submit</button>\n      </div>\n      <h3>Summary: Person Id *** No. of functions</h3>\n      <ul>\n        <li [style.color]=\"getAuthorColor(d[0])\"\n            *ngFor=\"let d of getLegend() | async\">\n          {{ d[0] }} *** {{ d[1] }}\n        </li>\n      </ul>\n    </div>\n  </div>\n</div>\n"
+module.exports = "<div class=\"container-graph\">\n  <div class=\"error-message\" style=\"display: none;\"><h1>No functions data to display for this file.\n    <a (click)=\"redirect()\" href=\"./main\">GO BACK</a>\n  </h1>\n  </div>\n  <div class=\"lines-container\">\n    <svg class=\"lines\"></svg>\n  </div>\n  <div class=\"legend-container\">\n    <div class=\"error-message\">\n      <a (click)=\"redirect()\" href=\"./main\">BACK to Main</a>\n    </div>\n    <div class=\"legend\">\n      <div class=\"input-field\" style=\"display: none\">\n        <input #path >\n        <button (click)=\"renderChart(path.value)\">Submit</button>\n      </div>\n      <h3>Summary: Function Dominance WRT most number of lines in a function, both signature and body has\n        dominant author color</h3>\n      <div class=\"legend-title\"><span>AuthorName: </span><span>No. of Functions</span></div>\n      <ul>\n        <li [style.color]=\"getAuthorColor(d[0])\"\n            *ngFor=\"let d of getLegend() | async\">\n          {{ d[0] }} : {{ d[1] }}\n        </li>\n      </ul>\n    </div>\n  </div>\n</div>\n"
 
 /***/ }),
 

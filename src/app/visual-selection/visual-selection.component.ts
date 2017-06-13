@@ -29,6 +29,9 @@ export class VisualSelectionComponent implements OnInit {
         case graphType.functionLineCount:
           this.router.navigate(['./functionDominance', this.fileName]);
           break;
+        case graphType.functionLineCountDifferentColorBody:
+          this.router.navigate(['./functionDominanceBody', this.fileName]);
+          break;
       }
 
   }
@@ -38,5 +41,6 @@ export class VisualSelectionComponent implements OnInit {
 export enum graphType {
   line = <any>"line",
   functionDominance = <any>"functionDominance",
-  functionLineCount = <any>"functionLineCount"
+  functionLineCount = <any>"functionLineCount",
+  functionLineCountDifferentColorBody = <any>"functionLineCountDifferentColorBody"
 }

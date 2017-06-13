@@ -11,6 +11,12 @@
 .lines {
   padding-left: 0px;
 }
+ul {
+  padding-left: 0px;
+}
+.legend-title {
+  font-weight: bold;
+}
 .legend {
   padding-left: 0px;
 }

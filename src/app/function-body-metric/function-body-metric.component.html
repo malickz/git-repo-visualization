@@ -1,16 +1,27 @@
 <div class="container-graph">
+  <div class="error-message" style="display: none;"><h1>No functions data to display for this file.
+    <a (click)="redirect()" href="./main">GO BACK</a>
+  </h1>
+  </div>
   <div class="lines-container">
     <svg class="lines"></svg>
   </div>
-  <div class="legend-container" [ngStyle]="{'height':_innerHeight+'px'}">
+  <div class="legend-container">
+    <div class="error-message">
+      <a (click)="redirect()" href="./main">BACK to Main</a>
+    </div>
     <div class="legend">
-      <input #path >
-      <button (click)="renderChart(path.value)">Submit</button>
-      <h3>Legend:</h3>
+      <div class="input-field" style="display: none">
+        <input #path >
+        <button (click)="renderChart(path.value)">Submit</button>
+      </div>
+      <h3>Summary: function clustering, author of function(signature) across the file is in same color,
+        body color is different for each author. </h3>
+      <div class="legend-title"><span>AuthorName: </span><span>No. of Functions</span></div>
       <ul>
-        <li [style.color]="getAuthorColor(d.personid)"
+        <li [style.color]="getAuthorColor(d[0])"
             *ngFor="let d of getLegend() | async">
-          {{ d.personid }}
+          {{ d[0] }} : {{ d[1] }}
         </li>
       </ul>
     </div>

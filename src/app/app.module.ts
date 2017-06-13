@@ -87,6 +87,10 @@ const ROUTES = [
     component: FunctionBodyMetricComponent
   },
   {
+    path: 'functionDominanceBody/:id',
+    component: FunctionBodyMetricComponent
+  },
+  {
     path: 'main',
     component: FilesTreeComponent
   }

@@ -3,12 +3,16 @@
     <svg class="lines"></svg>
   </div>
   <div class="legend-container" [ngStyle]="{'height':_innerHeight+'px'}">
+    <div class="error-message">
+      <a (click)="redirect()" href="./main">BACK to Main</a>
+    </div>
     <div class="legend">
-      <h3>Legend:</h3>
+      <h3>Summary: Line Graph WRT most number of line of code in file</h3>
+      <div class="legend-title"><span>AuthorName: </span><span>Line of Code</span></div>
       <ul>
-        <li [style.color]="getAuthorColor(d.personid)"
+        <li [style.color]="getAuthorColor(d[0])"
             *ngFor="let d of getLegend() | async">
-          {{ d.personid }}
+          {{ d[0] }} : {{ d[1] }}
         </li>
       </ul>
     </div>
