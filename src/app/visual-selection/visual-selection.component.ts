@@ -10,7 +10,9 @@ export class VisualSelectionComponent implements OnInit {
 
   @Input() public fileName: string = "README.md";
 
-  constructor(private router: Router) { }
+  constructor(private router: Router) {
+
+  }
 
   ngOnInit() {
   }

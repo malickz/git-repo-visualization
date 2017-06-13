@@ -2941,7 +2941,7 @@ exports = module.exports = __webpack_require__(12)();
 
 
 // module
-exports.push([module.i, "", ""]);
+exports.push([module.i, "ul li {\n  font-weight: bold;\n  margin-bottom: 20px;\n  cursor: pointer;\n}\n", ""]);
 
 // exports
 
@@ -2954,7 +2954,7 @@ module.exports = module.exports.toString();
 /***/ 1048:
 /***/ (function(module, exports) {
 
-module.exports = "<div>\n  <ul>\n    <li (click)=\"redirect('line')\">Line Graph WRT to most number of line of code in file</li>\n    <li (click)=\"redirect('functionDominance')\">Function Dominance WRT to most number of functions</li>\n    <li (click)=\"redirect('functionLineCount')\">Line Graph - WRT most number of lines in a function</li>\n  </ul>\n</div>\n\n\n\n"
+module.exports = "<div>\n  <div>Current Selected File: <b>{{fileName}}</b></div>\n  <br>\n  <div>Select type of visualization from below:</div>\n  <ul>\n    <li (click)=\"redirect('line')\">Line Graph WRT to most number of line of code in file</li>\n    <li (click)=\"redirect('functionDominance')\">Function Dominance WRT to most number of functions</li>\n    <li (click)=\"redirect('functionLineCount')\">Line Graph - WRT most number of lines in a function</li>\n  </ul>\n</div>\n\n\n\n"
 
 /***/ }),
 
@@ -5843,8 +5843,10 @@ var FilesTreeComponent = (function () {
         $(".loading").show();
         this.gitHubService.getTreeJson().subscribe(function (json) {
             _this.nodes = json;
+            $(".file-tree-container").css("height", $(window).innerHeight());
             setTimeout(function () {
                 $(".toggle-children-wrapper :first").click();
+                $(".left-side").trigger("scroll");
                 $(".loading").hide();
             }, 700);
         });
@@ -6216,11 +6218,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 var FunctionDominantComponent = (function () {
-    function FunctionDominantComponent(_element, _d3Service, gitHubService, route) {
+    function FunctionDominantComponent(_element, _d3Service, gitHubService, route, router) {
         this._element = _element;
         this._d3Service = _d3Service;
         this.gitHubService = gitHubService;
         this.route = route;
+        this.router = router;
         this.width = 700;
         this.height = 800;
         this.authorMap = new Map();
@@ -6331,7 +6334,15 @@ var FunctionDominantComponent = (function () {
                     });
                     $(".loading").hide();
                 }
+            }, function (err) {
+                if (err.status == 500) {
+                    $(".loading").hide();
+                    $(".error-message").show();
+                }
             });
+    };
+    FunctionDominantComponent.prototype.redirect = function () {
+        this.router.navigate(["./main"]);
     };
     FunctionDominantComponent.prototype.getAuthorColor = function (author) {
         if (this.authorMap.get(author)) {
@@ -6405,7 +6416,7 @@ FunctionDominantComponent = __decorate([
         template: __webpack_require__(754),
         styles: [__webpack_require__(735)]
     }),
-    __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_0__angular_core__["M" /* ElementRef */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_0__angular_core__["M" /* ElementRef */]) === "function" && _a || Object, typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_1_d3_ng2_service__["a" /* D3Service */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_d3_ng2_service__["a" /* D3Service */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_2__git_hub_service__["a" /* GitHubService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__git_hub_service__["a" /* GitHubService */]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_4__angular_router__["c" /* ActivatedRoute */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_4__angular_router__["c" /* ActivatedRoute */]) === "function" && _d || Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_0__angular_core__["M" /* ElementRef */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_0__angular_core__["M" /* ElementRef */]) === "function" && _a || Object, typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_1_d3_ng2_service__["a" /* D3Service */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_d3_ng2_service__["a" /* D3Service */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_2__git_hub_service__["a" /* GitHubService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__git_hub_service__["a" /* GitHubService */]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_4__angular_router__["c" /* ActivatedRoute */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_4__angular_router__["c" /* ActivatedRoute */]) === "function" && _d || Object, typeof (_e = typeof __WEBPACK_IMPORTED_MODULE_4__angular_router__["b" /* Router */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_4__angular_router__["b" /* Router */]) === "function" && _e || Object])
 ], FunctionDominantComponent);
 
 var colors = [
@@ -6477,7 +6488,7 @@ var colors = [
     "251, 051, 036",
     "082, 022, 032)"
 ];
-var _a, _b, _c, _d;
+var _a, _b, _c, _d, _e;
 //# sourceMappingURL=function-dominant.component.js.map
 
 /***/ }),
@@ -6509,11 +6520,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 var FunctionMetricComponent = (function () {
-    function FunctionMetricComponent(_element, _d3Service, gitHubService, route) {
+    function FunctionMetricComponent(_element, _d3Service, gitHubService, route, router) {
         this._element = _element;
         this._d3Service = _d3Service;
         this.gitHubService = gitHubService;
         this.route = route;
+        this.router = router;
         this.width = 700;
         this.height = 800;
         this.authorMap = new Map();
@@ -6645,7 +6657,15 @@ var FunctionMetricComponent = (function () {
                     });
                 }
                 $(".loading").hide();
+            }, function (err) {
+                if (err.status == 500) {
+                    $(".loading").hide();
+                    $(".error-message").show();
+                }
             });
+    };
+    FunctionMetricComponent.prototype.redirect = function () {
+        this.router.navigate(["./main"]);
     };
     FunctionMetricComponent.prototype.isLinePartOfFunction = function (d) {
         var flag = [];
@@ -6734,7 +6754,7 @@ FunctionMetricComponent = __decorate([
         template: __webpack_require__(755),
         styles: [__webpack_require__(736)]
     }),
-    __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_0__angular_core__["M" /* ElementRef */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_0__angular_core__["M" /* ElementRef */]) === "function" && _a || Object, typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_1_d3_ng2_service__["a" /* D3Service */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_d3_ng2_service__["a" /* D3Service */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_2__git_hub_service__["a" /* GitHubService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__git_hub_service__["a" /* GitHubService */]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_4__angular_router__["c" /* ActivatedRoute */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_4__angular_router__["c" /* ActivatedRoute */]) === "function" && _d || Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_0__angular_core__["M" /* ElementRef */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_0__angular_core__["M" /* ElementRef */]) === "function" && _a || Object, typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_1_d3_ng2_service__["a" /* D3Service */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_d3_ng2_service__["a" /* D3Service */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_2__git_hub_service__["a" /* GitHubService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__git_hub_service__["a" /* GitHubService */]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_4__angular_router__["c" /* ActivatedRoute */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_4__angular_router__["c" /* ActivatedRoute */]) === "function" && _d || Object, typeof (_e = typeof __WEBPACK_IMPORTED_MODULE_4__angular_router__["b" /* Router */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_4__angular_router__["b" /* Router */]) === "function" && _e || Object])
 ], FunctionMetricComponent);
 
 var colors = [
@@ -6806,7 +6826,7 @@ var colors = [
     "251, 051, 036",
     "082, 022, 032)"
 ];
-var _a, _b, _c, _d;
+var _a, _b, _c, _d, _e;
 //# sourceMappingURL=function-metric.component.js.map
 
 /***/ }),
@@ -7791,7 +7811,7 @@ exports = module.exports = __webpack_require__(12)();
 
 
 // module
-exports.push([module.i, ".file-tree-container {\n  height: 700px;\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-flex: 0;\n      -ms-flex: 0 1 auto;\n          flex: 0 1 auto;\n}\n.left-side {\n  -webkit-box-flex: 0;\n      -ms-flex: 0 1 50%;\n          flex: 0 1 50%;\n  background-color: #f1f1f1;\n}\n.right-side {\n  -webkit-box-flex: 0;\n      -ms-flex: 0 1 50%;\n          flex: 0 1 50%;\n  background-color: #e6e6e6;\n}\n\ndiv.tree div.tree-children::before,\ndiv.tree::before {\n  content: \"\";\n  position: absolute;\n  border-left: 1px dotted #23527c;\n  height: 100%;\n  top: -14px;\n  left: 12px\n}\n\ndiv.tree {\n  padding-left: 0;\n  margin-left: -5px\n}\n\ndiv.tree div.tree-children {\n  position: relative;\n  padding-left: 0;\n  margin-left: 16px\n}\n\ndiv.tree div.tree-children::before {\n  left: 5px\n}\n\ndiv.tree treenode>div>.node-wrapper {\n  margin-left: 24px\n}\n\ndiv.tree treenode>div>.node-wrapper>.node-content-wrapper {\n  margin-left: 4px\n}\n\ndiv.tree treenode>div.tree-node-leaf>.node-wrapper {\n  margin-left: 0\n}\n\ndiv.tree treenode>div::before {\n  content: \"\";\n  position: absolute;\n  border-bottom: 1px dotted #23527c;\n  width: 7px;\n  margin-top: 12px;\n  left: 7px\n}\n\ndiv.tree treenode>div .toggle-children-wrapper {\n  width: 13px;\n  height: 13px;\n  border: 1px solid #23527c;\n  position: absolute;\n  left: 15px;\n  margin-top: 5px;\n  margin-left: 0;\n  display: inline-block;\n  background-color: #fff;\n  z-index: 1\n}\n\ndiv.tree treenode>div .toggle-children-wrapper::before {\n  content: \"\";\n  display: inline-block;\n  width: 7px;\n  border-top: 1px solid #23527c;\n  position: absolute;\n  top: 5px;\n  left: 2px\n}\n\ndiv.tree treenode>div .toggle-children-wrapper.toggle-children-wrapper-collapsed::after {\n  content: \"\";\n  display: inline-block;\n  height: 7px;\n  border-left: 1px solid #23527c;\n  position: absolute;\n  top: 2px;\n  left: 5px\n}\n\ndiv.tree treenode>div .toggle-children-wrapper .toggle-children {\n  display: none\n}\n\ndiv.tree treenode>div .node-content-wrapper {\n  margin-left: 4px\n}\n\ndiv.tree>treenode>div::before {\n  left: 14px\n}\n\ndiv.tree>treenode>div>.node-wrapper>treenodeexpander>.toggle-children-wrapper {\n  left: 22px\n}\n", ""]);
+exports.push([module.i, ".file-tree-container {\n  height: 700px;\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-flex: 0;\n      -ms-flex: 0 1 auto;\n          flex: 0 1 auto;\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: column;\n          flex-direction: column;\n}\n.top-panel {\n\n}\n\n.bottom-panel {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-flex: 0;\n      -ms-flex: 0 1 auto;\n          flex: 0 1 auto;\n}\n.left-side {\n  -webkit-box-flex: 0;\n      -ms-flex: 0 1 50%;\n          flex: 0 1 50%;\n  background-color: #f1f1f1;\n}\n.right-side {\n  -webkit-box-flex: 0;\n      -ms-flex: 0 1 50%;\n          flex: 0 1 50%;\n  background-color: #e6e6e6;\n}\n\ndiv.tree div.tree-children::before,\ndiv.tree::before {\n  content: \"\";\n  position: absolute;\n  border-left: 1px dotted #23527c;\n  height: 100%;\n  top: -14px;\n  left: 12px\n}\n\ndiv.tree {\n  padding-left: 0;\n  margin-left: -5px\n}\n\ndiv.tree div.tree-children {\n  position: relative;\n  padding-left: 0;\n  margin-left: 16px\n}\n\ndiv.tree div.tree-children::before {\n  left: 5px\n}\n\ndiv.tree treenode>div>.node-wrapper {\n  margin-left: 24px\n}\n\ndiv.tree treenode>div>.node-wrapper>.node-content-wrapper {\n  margin-left: 4px\n}\n\ndiv.tree treenode>div.tree-node-leaf>.node-wrapper {\n  margin-left: 0\n}\n\ndiv.tree treenode>div::before {\n  content: \"\";\n  position: absolute;\n  border-bottom: 1px dotted #23527c;\n  width: 7px;\n  margin-top: 12px;\n  left: 7px\n}\n\ndiv.tree treenode>div .toggle-children-wrapper {\n  width: 13px;\n  height: 13px;\n  border: 1px solid #23527c;\n  position: absolute;\n  left: 15px;\n  margin-top: 5px;\n  margin-left: 0;\n  display: inline-block;\n  background-color: #fff;\n  z-index: 1\n}\n\ndiv.tree treenode>div .toggle-children-wrapper::before {\n  content: \"\";\n  display: inline-block;\n  width: 7px;\n  border-top: 1px solid #23527c;\n  position: absolute;\n  top: 5px;\n  left: 2px\n}\n\ndiv.tree treenode>div .toggle-children-wrapper.toggle-children-wrapper-collapsed::after {\n  content: \"\";\n  display: inline-block;\n  height: 7px;\n  border-left: 1px solid #23527c;\n  position: absolute;\n  top: 2px;\n  left: 5px\n}\n\ndiv.tree treenode>div .toggle-children-wrapper .toggle-children {\n  display: none\n}\n\ndiv.tree treenode>div .node-content-wrapper {\n  margin-left: 4px\n}\n\ndiv.tree>treenode>div::before {\n  left: 14px\n}\n\ndiv.tree>treenode>div>.node-wrapper>treenodeexpander>.toggle-children-wrapper {\n  left: 22px\n}\n", ""]);
 
 // exports
 
@@ -7972,7 +7992,7 @@ module.exports = "<p>\n  treemap works!\n</p>\n"
 /***/ 752:
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"file-tree-container\">\n  <div class=\"left-side\">\n    <tree-root [nodes]=\"nodes\" [options]=\"options\"\n               (onActivate)=\"onClick($event)\">\n    </tree-root>\n  </div>\n  <div class=\"right-side\">\n    <app-visual-selection\n      [fileName]=\"fileName\">\n    </app-visual-selection>\n  </div>\n</div>\n"
+module.exports = "<div class=\"file-tree-container\">\n  <div class=\"top-panel\">\n    <h1>Git repo visualization: File authorship and dominance visualization</h1>\n  </div>\n  <div class=\"bottom-panel\">\n    <div class=\"left-side\">\n      <tree-root [nodes]=\"nodes\" [options]=\"options\"\n                 (onActivate)=\"onClick($event)\">\n      </tree-root>\n    </div>\n    <div class=\"right-side\">\n      <app-visual-selection\n        [fileName]=\"fileName\">\n      </app-visual-selection>\n    </div>\n  </div>\n</div>\n"
 
 /***/ }),
 
@@ -7986,14 +8006,14 @@ module.exports = "<div class=\"container-graph\">\n  <div class=\"lines-containe
 /***/ 754:
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"container-graph\">\n  <div class=\"lines-container\">\n    <svg class=\"lines\"></svg>\n  </div>\n  <div class=\"legend-container\" [ngStyle]=\"{'height':_innerHeight+'px'}\">\n    <div class=\"legend\">\n      <input #path >\n      <button (click)=\"renderChart(path.value)\">Submit</button>\n      <h3>Legend:</h3>\n      <ul>\n        <li [style.color]=\"getAuthorColor(d.personid)\"\n            *ngFor=\"let d of getLegend() | async\">\n          {{ d.personid }}\n        </li>\n      </ul>\n    </div>\n  </div>\n</div>\n"
+module.exports = "<div class=\"container-graph\">\n  <div class=\"error-message\" style=\"display: none;\"><h1>No functions data to display for this file.\n    <a (click)=\"redirect()\" href=\"./main\">GO BACK</a>\n  </h1>\n  </div>\n  <div class=\"lines-container\">\n    <svg class=\"lines\"></svg>\n  </div>\n  <div class=\"legend-container\" [ngStyle]=\"{'height':_innerHeight+'px'}\">\n    <div class=\"legend\">\n      <div class=\"input-field\" style=\"display: none\">\n        <input #path >\n        <button (click)=\"renderChart(path.value)\">Submit</button>\n      </div>\n      <h3>Legend:</h3>\n      <ul>\n        <li [style.color]=\"getAuthorColor(d.personid)\"\n            *ngFor=\"let d of getLegend() | async\">\n          {{ d.personid }}\n        </li>\n      </ul>\n    </div>\n  </div>\n</div>\n"
 
 /***/ }),
 
 /***/ 755:
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"container-graph\">\n  <div class=\"lines-container\">\n    <svg class=\"lines\"></svg>\n  </div>\n  <div class=\"legend-container\">\n    <div class=\"legend\">\n      <input #path >\n      <button (click)=\"renderChart(path.value)\">Submit</button>\n      <h3>Summary: Person Id *** No. of functions</h3>\n      <ul>\n        <li [style.color]=\"getAuthorColor(d[0])\"\n            *ngFor=\"let d of getLegend() | async\">\n          {{ d[0] }} *** {{ d[1] }}\n        </li>\n      </ul>\n    </div>\n  </div>\n</div>\n"
+module.exports = "<div class=\"container-graph\">\n  <div class=\"error-message\" style=\"display: none;\"><h1>No functions data to display for this file.\n    <a (click)=\"redirect()\" href=\"./main\">GO BACK</a>\n  </h1>\n  </div>\n  <div class=\"lines-container\">\n    <svg class=\"lines\"></svg>\n  </div>\n  <div class=\"legend-container\">\n    <div class=\"legend\">\n      <div class=\"input-field\" style=\"display: none\">\n        <input #path >\n        <button (click)=\"renderChart(path.value)\">Submit</button>\n      </div>\n      <h3>Summary: Person Id *** No. of functions</h3>\n      <ul>\n        <li [style.color]=\"getAuthorColor(d[0])\"\n            *ngFor=\"let d of getLegend() | async\">\n          {{ d[0] }} *** {{ d[1] }}\n        </li>\n      </ul>\n    </div>\n  </div>\n</div>\n"
 
 /***/ }),
 

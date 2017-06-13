@@ -60,67 +60,28 @@ router.post('/getFunctionData', function(req, res) {
 router.get('/getTreeJSON', function(req, res) {
   getTreeJson(res);
 });
-//
-// router.post('/getDominantAuthor', function(req, res) {
-//   db.all("select DISTINCT line_blame_info.finalline, line_blame_info.path, line_blame_info.contentlength, commits.authormail, commits.authorname from line_blame_info join commits on line_blame_info.sha = commits.sha where line_blame_info.path = '" + req.param("path") + "' and finalline between "+ req.param("start") + " and " + req.param("end"), (err, result) => {
-//     if (err) {
-//       console.log("select failed on line blame: " + "");
-//       return res.status(500).json("failed");
-//     }
-//     let idx = result.length;
-//     result.forEach((row, index) => {
-//       let fullEmail = row.authorname + " <" + row.authormail + ">";
-//       dbPersons.all("select * from emails Where fullemail like '%" + fullEmail +"%'", (err, rPersons) => {
-//         if (err) {
-//           console.log("select failed on line blame: " + "");
-//         }
-//         row["personid"] = rPersons[0].personid;
-//
-//         if (index+1 === idx) {
-//
-//           let authorLookup = new Map();
-//           let authorCount = 0;
-//           let authorLookupArray = [];
-//           result.forEach(line => {
-//             if (!authorLookup.get(line.personid)) {
-//               result.forEach(line2 => {
-//                 if(line.personid === line2.personid) {
-//                   authorCount++;
-//                 }
-//               });
-//               authorLookup.set(line.personid, authorCount);
-//               authorLookupArray.push([line.personid, authorCount]);
-//               authorCount = 0;
-//             }
-//           });
-//
-//           authorLookupArray.sort((a, b) => { // returns sorted list of authors according to their LOC in ascending order
-//             return b[1] > a[1] ? 1 : -1;
-//           });
-//
-//           return res.status(200).json(authorLookupArray[0]);
-//         }
-//       });
-//     });
-//   });
-// });
+
 
 router.post('/getFunctionMetric', function(req, res) {
   let path = req.param("path");
   getFunctionMetric(path, (funData) => {
     let cbCount = 0;
     let funDataLen = funData.length;
-    funData.forEach((fData, fIndex) => {
-      getDominantAuthor(fData, res, path, (authorData) => {
-        cbCount++;
-        fData.push(authorData);
-        if (cbCount == funDataLen) {
-          fetchLineData(req, res, path, (data) => {
-            res.status(200).json([funData, data]);
-          });
-        }
-      })
-    });
+    if (funDataLen != 0) {
+      funData.forEach((fData, fIndex) => {
+        getDominantAuthor(fData, res, path, (authorData) => {
+          cbCount++;
+          fData.push(authorData);
+          if (cbCount == funDataLen) {
+            fetchLineData(req, res, path, (data) => {
+              res.status(200).json([funData, data]);
+            });
+          }
+        })
+      });
+    } else {
+      return res.status(500).json("No data for functions");
+    }
   });
 });
 
@@ -467,13 +428,16 @@ function fetchLineData(req, res, path, cb) {
 function getFunctionData(req, res) {
   // let data = ctags.ctagsCommand(["-x", "--c-types=f", "./tmp/git/" +req.param("path")]);
   let funData = callCTags(req.param("path"));
-
-  if(req.param("lineData")) {
-    fetchLineData(req, res, req.param("path"), (data) => {
-      res.status(200).json([funData, data]);
-    });
+  if (funData.length > 0) {
+    if (req.param("lineData")) {
+      fetchLineData(req, res, req.param("path"), (data) => {
+        res.status(200).json([funData, data]);
+      });
+    } else {
+      res.status(200).json(funData);
+    }
   } else {
-    res.status(200).json(funData);
+    return res.status(500).json("No function data");
   }
 }
 
@@ -499,18 +463,22 @@ function getFunctionMetric(path, cb) {
     return Number(a[2]) > Number(b[2]) ? 1 : -1;
   });
   let len = sortedFunData.length;
-  for (let i = 0; i < len; i++) {
-    if (i+1 >= len) {
-      db.all("select * from line_blame_info where path = '"+ path + "' ORDER BY lid DESC limit 1", (err, r) => {
-        if (err) {
-          console.log("select failed on line blame: " + "");
-        }
-        sortedFunData[i].push(r[0].finalline);
-        cb(sortedFunData);
-      });
-    } else {
-      sortedFunData[i].push((sortedFunData[i + 1][2])-1);
+  if (len != 0) {
+    for (let i = 0; i < len; i++) {
+      if (i+1 >= len) {
+        db.all("select * from line_blame_info where path = '"+ path + "' ORDER BY lid DESC limit 1", (err, r) => {
+          if (err) {
+            console.log("select failed on line blame: " + "");
+          }
+          sortedFunData[i].push(r[0].finalline);
+          cb(sortedFunData);
+        });
+      } else {
+        sortedFunData[i].push((sortedFunData[i + 1][2])-1);
+      }
     }
+  } else {
+    cb(sortedFunData);
   }
 }
 
@@ -560,46 +528,46 @@ function getDominantAuthor(req, res, path, cb) {
 }
 
 function getTreeJson(res) {
-    db.all("select * from tree_structure order by fid asc", function(err, result) {
-      if (err) {
-        console.error('error running update query' + err);
-        return res.status(500).json(err);
-      }
-      let hierarchy = [];
+  db.all("select * from tree_structure order by fid asc", function(err, result) {
+    if (err) {
+      console.error('error running update query' + err);
+      return res.status(500).json(err);
+    }
+    let hierarchy = [];
 
-      result.unshift({
-        "path": "root",
-        "loc": 0,
-        "fid": 0,
-        "parent": null,
-        "filename": "root"
-      });
-
-      let dataMap = result.reduce(function(map, node) {
-        map[node.path] = node;
-        return map;
-      }, {});
-
-      result.forEach(function(node) {
-        Object.defineProperty(node, "id",
-          Object.getOwnPropertyDescriptor(node, "fid"));
-        delete node["fid"];
-
-        Object.defineProperty(node, "name",
-          Object.getOwnPropertyDescriptor(node, "path"));
-        delete node["path"];
-
-        let parent = dataMap[node.parent];
-        if (parent) {
-          (parent.children || (parent.children = [])).push(node);
-        } else {
-          hierarchy.push(node);
-        }
-      });
-      dataMap = undefined;
-      result = undefined;
-      res.status(200).json(hierarchy);
+    result.unshift({
+      "path": "root",
+      "loc": 0,
+      "fid": 0,
+      "parent": null,
+      "filename": "root"
     });
+
+    let dataMap = result.reduce(function(map, node) {
+      map[node.path] = node;
+      return map;
+    }, {});
+
+    result.forEach(function(node) {
+      Object.defineProperty(node, "id",
+        Object.getOwnPropertyDescriptor(node, "fid"));
+      delete node["fid"];
+
+      Object.defineProperty(node, "name",
+        Object.getOwnPropertyDescriptor(node, "path"));
+      delete node["path"];
+
+      let parent = dataMap[node.parent];
+      if (parent) {
+        (parent.children || (parent.children = [])).push(node);
+      } else {
+        hierarchy.push(node);
+      }
+    });
+    dataMap = undefined;
+    result = undefined;
+    res.status(200).json(hierarchy);
+  });
 }
 
 module.exports = router;

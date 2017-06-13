@@ -37,8 +37,10 @@ export class FilesTreeComponent implements OnInit {
 
     this.gitHubService.getTreeJson().subscribe((json) => {
       this.nodes = json;
+      $(".file-tree-container").css("height", $(window).innerHeight());
       setTimeout(() => {
         $(".toggle-children-wrapper :first").click();
+        $(".left-side").trigger("scroll");
         $(".loading").hide();
       }, 700);
     });

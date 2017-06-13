@@ -2,7 +2,7 @@ import {Component, ElementRef, Input, OnInit} from '@angular/core';
 import {D3Service, D3, Selection } from 'd3-ng2-service';
 import {GitHubService} from "../git-hub.service";
 import {Observable} from "rxjs";
-import {ActivatedRoute} from "@angular/router";
+import {ActivatedRoute, Router} from "@angular/router";
 
 @Component({
   selector: 'app-function-metric',
@@ -27,7 +27,8 @@ export class FunctionMetricComponent implements OnInit {
   constructor(private _element: ElementRef,
               private _d3Service: D3Service,
               private gitHubService: GitHubService,
-              private route: ActivatedRoute) {
+              private route: ActivatedRoute,
+              private router: Router) {
     this._d3 = this._d3Service.getD3();
     this._parentNativeElement = this._element.nativeElement;
   }
@@ -165,7 +166,16 @@ export class FunctionMetricComponent implements OnInit {
             });
         }
         $(".loading").hide();
+      }, (err) => {
+        if (err.status == 500) {
+          $(".loading").hide();
+          $(".error-message").show();
+        }
       });
+  }
+
+  public redirect() {
+    this.router.navigate(["./main"]);
   }
 
   private isLinePartOfFunction(d: any): Array<any> {

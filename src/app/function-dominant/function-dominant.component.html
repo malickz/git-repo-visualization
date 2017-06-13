@@ -1,11 +1,17 @@
 <div class="container-graph">
+  <div class="error-message" style="display: none;"><h1>No functions data to display for this file.
+    <a (click)="redirect()" href="./main">GO BACK</a>
+  </h1>
+  </div>
   <div class="lines-container">
     <svg class="lines"></svg>
   </div>
   <div class="legend-container" [ngStyle]="{'height':_innerHeight+'px'}">
     <div class="legend">
-      <input #path >
-      <button (click)="renderChart(path.value)">Submit</button>
+      <div class="input-field" style="display: none">
+        <input #path >
+        <button (click)="renderChart(path.value)">Submit</button>
+      </div>
       <h3>Legend:</h3>
       <ul>
         <li [style.color]="getAuthorColor(d.personid)"
